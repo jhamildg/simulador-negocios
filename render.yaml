@@ -3,6 +3,7 @@ services:
   - type: web
     name: simulador-negocios
     runtime: node
+    plan: free
     rootDir: backend
     buildCommand: npm install
     startCommand: npm start
@@ -22,3 +23,4 @@ services:
           property: connectionString
 databases:
   - name: simulador-db
+    plan: free
