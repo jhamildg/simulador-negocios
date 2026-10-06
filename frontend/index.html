@@ -1,0 +1,1214 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Juego de gestión empresarial: dirige tu empresa durante cinco años y descubre qué tipo de director eres.">
+<title>Simulador de Negocios</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box}html{color-scheme:light;-webkit-text-size-adjust:100%}body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+
+/* Layout: barra de progreso arriba (año, nivel, decisión); a la izquierda el escenario donde se decide y se leen consecuencias; a la derecha el tablero de la empresa que se actualiza con cada decisión. */
+:root{
+  --bg:#F2F5F4; --surface:#FFFFFF; --sunk:#E7ECEA; --ink:#13201D; --ink2:#4A5A56; --mute:#7C8A86; --line:#D5DDDA;
+  --accent:#0B6E5B; --accent-soft:#D9EDE7; --on-accent:#FFFFFF;
+  --good:#0B6E5B; --bad:#B83A3A; --bad-soft:#F6DFDD; --warn:#9A6B0F; --warn-soft:#F5E8CB; --proj:#9CCFC3; --blue:#2457C5; --blue-soft:#DCE7FB; --purple:#6B3FB8; --purple-soft:#E9E0F8; --gold:#B8860B; --gold-soft:#F8ECC4; --hud:#0F2A3A; --hud-ink:#EAF3F7; --hud-mute:#9DB6C2; --sky:#CFE6F7; --sky-bad:#D8D0D6; --ground:#9BC7A4; --ground-bad:#B5B0A2; --bld:#2F5FA8; --bld2:#6B3FB8; --win:#FFE08A; --win-off:#7C8FB0; --door:#1B2F4A; --sign:#0B6E5B; --on-sign:#FFFFFF; --person:#33454F; --sun:#F2B62E; --cloud:#6E6A78; --cloud-l:#FFFFFF; --road:#5B6670; --road-l:#D9DEE2; --box:#C99A5B;
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0E1614; --surface:#16211E; --sunk:#1E2B28; --ink:#E8EFEC; --ink2:#B0BFBA; --mute:#82918C; --line:#2B3A36;
+  --accent:#3FC2A4; --accent-soft:#173A33; --on-accent:#06231D;
+  --good:#3FC2A4; --bad:#F0837C; --bad-soft:#40201E; --warn:#E3B45A; --warn-soft:#3A2E14; --proj:#27705F; --blue:#7FA8F5; --blue-soft:#1A2B4D; --purple:#B79AF0; --purple-soft:#2C2147; --gold:#E3B45A; --gold-soft:#3A2E14; --hud:#0A1C27; --hud-ink:#EAF3F7; --hud-mute:#8FA9B5; --sky:#1B3145; --sky-bad:#2E2A33; --ground:#254A36; --ground-bad:#3A372F; --bld:#4E7FCC; --bld2:#8C66D6; --win:#FFD86B; --win-off:#33456A; --door:#0B1622; --sign:#3FC2A4; --on-sign:#06231D; --person:#C9D6DC; --sun:#F2C14E; --cloud:#8C8798; --cloud-l:#33506B; --road:#1C2429; --road-l:#55626B; --box:#A87B45; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0E1614; --surface:#16211E; --sunk:#1E2B28; --ink:#E8EFEC; --ink2:#B0BFBA; --mute:#82918C; --line:#2B3A36;
+  --accent:#3FC2A4; --accent-soft:#173A33; --on-accent:#06231D;
+  --good:#3FC2A4; --bad:#F0837C; --bad-soft:#40201E; --warn:#E3B45A; --warn-soft:#3A2E14; --proj:#27705F; --blue:#7FA8F5; --blue-soft:#1A2B4D; --purple:#B79AF0; --purple-soft:#2C2147; --gold:#E3B45A; --gold-soft:#3A2E14; --hud:#0A1C27; --hud-ink:#EAF3F7; --hud-mute:#8FA9B5; --sky:#1B3145; --sky-bad:#2E2A33; --ground:#254A36; --ground-bad:#3A372F; --bld:#4E7FCC; --bld2:#8C66D6; --win:#FFD86B; --win-off:#33456A; --door:#0B1622; --sign:#3FC2A4; --on-sign:#06231D; --person:#C9D6DC; --sun:#F2C14E; --cloud:#8C8798; --cloud-l:#33506B; --road:#1C2429; --road-l:#55626B; --box:#A87B45; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:1220px;margin:0 auto;padding-inline:20px;padding-block:22px 56px;display:flex;flex-direction:column;gap:18px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.05;margin:0;letter-spacing:-.02em;text-wrap:balance}
+h2{font-family:var(--display);font-weight:700;font-size:17px;margin:0;letter-spacing:-.01em}
+h3{font-family:var(--display);font-weight:700;font-size:clamp(19px,2.4vw,24px);line-height:1.25;margin:0;text-wrap:balance}
+p{margin:0}
+.eyebrow{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--mute);font-weight:600}
+.sub{color:var(--ink2);max-width:60ch}
+.note{color:var(--mute);font-size:12.5px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.top{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between}
+.tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.seg{display:inline-flex;background:var(--sunk);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;color:var(--ink2);padding:6px 12px;border-radius:8px;font-weight:500}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.tc{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--mute)}
+.tc input{width:54px;font-family:var(--mono);font-size:13px;background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:5px 6px;color:var(--ink);text-align:right}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0}
+.btn{background:var(--accent);border:1px solid var(--accent);color:var(--on-accent);font-weight:600;border-radius:10px;padding:11px 18px;align-self:flex-start}
+.btn.ghost{background:transparent;color:var(--ink2);border-color:var(--line);font-weight:500}
+.link{background:none;border:0;padding:0;color:var(--accent);font-weight:600;font-size:13px;text-decoration:underline;text-underline-offset:3px}
+/* inicio */
+.types{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.type{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.type b{font-family:var(--display);font-size:18px}
+.type span{color:var(--ink2);font-size:13.5px}
+.type dl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;margin:4px 0 0;font-size:12.5px}
+.type dt{color:var(--mute)} .type dd{margin:0;font-family:var(--mono);text-align:right}
+.type[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);border-width:2px;padding:15px}
+.setup{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.setup label{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--ink2);min-width:0}
+.setup input{font-family:var(--mono);font-size:14px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--ink);width:100%;min-width:0}
+.how{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;font-size:13px;color:var(--ink2)}
+.how div{background:var(--sunk);border-radius:10px;padding:10px 12px}
+.how b{display:block;color:var(--ink);font-family:var(--display)}
+/* barra de juego */
+.bar{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center}
+.lvl{display:flex;flex-direction:column;line-height:1.2}
+.lvl b{font-family:var(--display);font-size:18px}
+.years{display:flex;gap:6px}
+.yr{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--mute);text-align:center}
+.yr i{display:block;height:8px;border-radius:4px;background:var(--sunk);overflow:hidden}
+.yr i u{display:block;height:100%;background:var(--accent);transition:width .4s}
+.yr.on{color:var(--ink);font-weight:600}
+.grid{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);gap:18px;align-items:start}
+.stage{display:flex;flex-direction:column;gap:14px;min-width:0;animation:in .35s ease}
+@keyframes in{from{transform:translateY(6px)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){.stage{animation:none}.yr i u,.bars i{transition:none}}
+.card{background:var(--surface);border:2px solid var(--accent);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.card.event{border-color:var(--warn)} .card.plain{border:1px solid var(--line)}
+.tagrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tag{font-size:11px;letter-spacing:.07em;text-transform:uppercase;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--accent-soft);color:var(--ink)}
+.tag.ev{background:var(--warn-soft)} .tag.gray{background:var(--sunk);color:var(--ink2)}
+.impact{background:var(--warn-soft);border-radius:10px;padding:10px 12px;font-size:14px}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opts button{text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:11px;padding:12px 14px;display:grid;grid-template-columns:26px minmax(0,1fr);gap:10px;align-items:start}
+.opts button b{font-family:var(--display);width:26px;height:26px;border-radius:50%;background:var(--sunk);display:grid;place-items:center;font-size:13px}
+.opts button:hover{border-color:var(--accent);background:var(--accent-soft)}
+.opts small{display:block;color:var(--warn);font-size:12px;margin-top:2px}
+.deltas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 18px;margin:0;padding:0;list-style:none}
+.deltas li{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed var(--line);padding:5px 0;font-size:14px}
+.deltas b{font-family:var(--mono);font-weight:500;white-space:nowrap}
+.up{color:var(--good)} .down{color:var(--bad)} .neu{color:var(--ink2)}
+.why{background:var(--sunk);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.why b{font-family:var(--display)}
+.future{font-size:13px;color:var(--ink2);border-left:3px solid var(--line);padding-left:10px}
+.verdict{border-radius:10px;padding:10px 14px;font-family:var(--display);font-size:17px;font-weight:700}
+.verdict.up{background:var(--accent-soft);color:var(--ink)} .verdict.down{background:var(--bad-soft);color:var(--ink)} .verdict.neu{background:var(--sunk);color:var(--ink)}
+.rep{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.rep div{background:var(--surface);padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.rep span{font-size:11.5px;color:var(--mute)} .rep b{font-family:var(--mono);font-weight:500;font-size:15px;overflow-wrap:anywhere} .rep em{font-style:normal;font-size:12px;font-family:var(--mono)}
+ul.bul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px;color:var(--ink2)}
+/* tablero */
+.dash{display:flex;flex-direction:column;gap:14px;min-width:0}
+.score{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center}
+.ring{width:104px;height:104px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--accent) calc(var(--v)*1%),var(--sunk) 0)}
+.ring div{width:82px;height:82px;border-radius:50%;background:var(--surface);display:grid;place-items:center;text-align:center;line-height:1.05}
+.ring b{font-family:var(--display);font-size:28px} .ring span{font-size:10px;color:var(--mute);display:block}
+.bars{display:flex;flex-direction:column;gap:5px;font-size:12.5px}
+.bars div{display:grid;grid-template-columns:84px minmax(0,1fr) 26px;gap:8px;align-items:center}
+.bars span{color:var(--ink2)} .bars em{font-style:normal;font-family:var(--mono);text-align:right}
+.bars s{display:block;height:7px;border-radius:4px;background:var(--sunk);overflow:hidden;text-decoration:none}
+.bars i{display:block;height:100%;background:var(--accent);border-radius:4px;transition:width .5s}
+.bars i.low{background:var(--bad)} .bars i.mid{background:var(--warn)}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0;position:relative}
+.kpi .n{font-size:12px;color:var(--mute);display:flex;justify-content:space-between;gap:4px;align-items:center}
+.kpi .v{font-family:var(--mono);font-weight:500;font-size:16px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.kpi .d{font-family:var(--mono);font-size:11.5px;min-height:17px}
+.kpi.alert{border-color:var(--bad);background:var(--bad-soft)}
+.q{width:18px;height:18px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--ink2);font-size:11px;line-height:1;padding:0;flex:none}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tabs button{border:1px solid var(--line);background:transparent;border-radius:20px;padding:3px 10px;font-size:12.5px;color:var(--ink2)}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.chart{position:relative}
+.chart svg,.scene{display:block;width:100%;height:auto}
+.chart text{font-family:var(--mono);font-size:11px;fill:var(--mute)}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;border-radius:8px;padding:6px 9px;white-space:nowrap;transform:translate(-50%,-115%);font-family:var(--mono)}
+.meter{height:12px;background:var(--sunk);border-radius:6px;position:relative;margin:22px 0 6px}
+.meter i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:var(--accent)}
+.meter i.short{background:var(--bad)}
+.meter u{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ink)}
+.meter em{position:absolute;top:-21px;transform:translateX(-50%);font-style:normal;font-size:11px;color:var(--ink2);white-space:nowrap}
+.tasks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.tasks li{display:grid;grid-template-columns:18px minmax(0,1fr);gap:8px;align-items:center;color:var(--ink2)}
+.tasks i{width:16px;height:16px;border-radius:50%;border:2px solid var(--mute);font-style:normal;font-size:10px;line-height:12px;text-align:center;color:var(--on-accent)}
+.tasks li.done{color:var(--ink)} .tasks li.done i{background:var(--accent);border-color:var(--accent)}
+.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0;font-size:13px}
+.tl li{display:grid;grid-template-columns:14px minmax(0,1fr);gap:10px;padding-bottom:10px;position:relative}
+.tl li:before{content:"";position:absolute;left:5px;top:12px;bottom:0;width:2px;background:var(--line)}
+.tl li:last-child:before{display:none}
+.tl i{width:12px;height:12px;border-radius:50%;margin-top:4px;background:var(--mute)}
+.tl i.up{background:var(--good)} .tl i.down{background:var(--bad)} .tl i.yr{background:var(--ink);border-radius:3px}
+.tl span{color:var(--mute);font-size:11.5px;display:block}
+.overlay{position:fixed;inset:0;background:rgba(10,20,18,.55);display:grid;place-items:center;padding:20px;z-index:10}
+.modal{background:var(--surface);border-radius:16px;padding:22px;max-width:460px;width:100%;display:flex;flex-direction:column;gap:12px;border:1px solid var(--line)}
+.end{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 18px;margin:0}
+.end div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed var(--line);padding:5px 0;font-size:14px}
+.end b{font-family:var(--mono);font-weight:500}
+.ico{width:1.15em;height:1.15em;vertical-align:-.2em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none;display:inline-block}
+.banner .big .ico{width:40px;height:40px;stroke-width:1.8;vertical-align:middle}
+.b-blue .big{color:var(--blue)} .b-green .big{color:var(--good)} .b-red .big{color:var(--bad)} .b-yellow .big{color:var(--warn)} .b-gold .big{color:var(--gold)}
+.opt-ic{color:var(--blue)} .opt-ic .ico{width:26px;height:26px}
+.k-fin .ki{color:var(--good)} .k-mkt .ki{color:var(--blue)} .k-inn .ki{color:var(--purple)} .k-rsk .ki{color:var(--bad)}
+.ki .ico{width:15px;height:15px;vertical-align:middle}
+.deltas li span .ico,.rep span .ico,.end span .ico,.idgrid span .ico{color:var(--ink2);margin-right:2px}
+.ach small{font-size:10px;font-weight:500;opacity:.75;margin-left:6px;text-transform:uppercase;letter-spacing:.05em}
+.ach.on .ico{color:var(--gold)}
+.pc{font-size:12.5px;color:var(--ink2);display:block} .pc b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+.stylebox{background:var(--purple-soft);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.stylebox .sty s{background:var(--surface)}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.btn.alt{background:var(--blue);border-color:var(--blue);color:var(--surface)}
+.alts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.alts div{background:var(--sunk);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;font-size:13px;color:var(--ink2)} .alts b{color:var(--ink);font-family:var(--display)}
+@media (max-width:620px){.alts{grid-template-columns:minmax(0,1fr)}}
+.acct{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.hello{font-size:13.5px;color:var(--ink2);white-space:nowrap}
+.seg.nav button{padding:5px 10px;font-size:13px}
+.saved{display:block;font-size:11px;color:#3FC2A4;opacity:0;transition:opacity .3s;margin-top:2px} .saved.on{opacity:1}
+.pill.i-blue{background:var(--blue-soft);color:var(--ink)} .pill.i-good{background:var(--accent-soft);color:var(--ink)} .pill.i-warn{background:var(--warn-soft);color:var(--ink)}
+.glist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px} .gcard{display:flex;flex-direction:column;gap:12px}
+.two3{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.bars.wide div{grid-template-columns:minmax(0,190px) minmax(0,1fr) 30px}
+.evo{display:flex;gap:6px;align-items:flex-end;height:110px;overflow-x:auto;padding-top:16px}
+.evo div{flex:0 0 26px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;position:relative}
+.evo i{display:block;width:100%;background:var(--accent);border-radius:4px 4px 0 0;min-height:2px} .evo span{font-size:10px;color:var(--mute)} .evo b{position:absolute;top:-14px;font-size:10px;font-family:var(--mono);font-weight:500}
+.tbl{border-collapse:collapse;width:100%;font-size:13px} .tbl th,.tbl td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);white-space:nowrap}
+.scroll{overflow-x:auto}
+@media (max-width:760px){.glist,.two3{grid-template-columns:minmax(0,1fr)}}
+.btn.sm{padding:6px 12px;font-size:13.5px;align-self:center}
+.guest{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;border-color:var(--blue);background:var(--blue-soft)}
+.guest>div:first-child{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 320px} .guest b{font-family:var(--display);font-size:16px} .guest span{color:var(--ink2);font-size:13.5px}
+.authwrap{max-width:520px;margin:0 auto;width:100%}
+.authform{display:flex;flex-direction:column;gap:12px}
+.authform label{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--ink2)}
+.authform input{font:inherit;font-size:15px;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:10px 12px;color:var(--ink);width:100%}
+.authform .btn{align-self:stretch;text-align:center}
+/* ===== capa de juego ===== */
+.hud{background:var(--hud);color:var(--hud-ink);border-radius:16px;padding:14px 18px;display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:18px;align-items:center}
+.hud b{font-family:var(--display);font-size:20px;display:block;line-height:1.1}
+.hud-k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;opacity:.8}
+.hud .hud-k{color:var(--hud-mute);opacity:1}
+.hud .yr{color:var(--hud-mute)} .hud .yr.on{color:var(--hud-ink)} .hud .yr i{background:rgba(255,255,255,.14)} .hud .yr.past u,.hud .yr u{background:#3FC2A4}
+.hud .btn.ghost{color:var(--hud-ink);border-color:rgba(255,255,255,.25);align-self:center}
+.hud-r{text-align:right}
+.banner{display:flex;gap:14px;align-items:center;border-radius:12px;padding:14px 16px;margin:-6px -6px 0}
+.banner .big{font-size:40px;line-height:1;flex:none}
+.banner h3{margin-top:2px}
+.b-blue{background:var(--blue-soft)} .b-green{background:var(--accent-soft)} .b-red{background:var(--bad-soft)} .b-yellow{background:var(--warn-soft)} .b-gold{background:var(--gold-soft)}
+.card{border-color:var(--blue)} .card.event{border-color:var(--bad)} .card.ev-good{border-color:var(--good)} .card.final{border-color:var(--gold)}
+.sit{font-family:var(--display);font-size:18px;line-height:1.3}
+.impact.i-good{background:var(--accent-soft)} .impact.i-bad{background:var(--bad-soft)} .impact.i-warn{background:var(--warn-soft)} .impact.i-blue{background:var(--blue-soft)} .impact.i-purple{background:var(--purple-soft)}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.opt{text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:9px;min-width:0;box-shadow:0 1px 0 var(--line);transition:transform .15s,box-shadow .15s,border-color .15s,opacity .2s}
+.opt:hover{transform:translateY(-3px);border-color:var(--blue);box-shadow:0 8px 18px rgba(20,40,60,.14)}
+.opt.sel{border-color:var(--blue);background:var(--blue-soft);transform:scale(1.02);box-shadow:0 0 0 3px var(--blue-soft)}
+.opt.dim{opacity:.4}
+.opt-h{display:flex;justify-content:space-between;align-items:center}
+.opt-ic{font-size:26px;width:46px;height:46px;border-radius:12px;background:var(--blue-soft);display:grid;place-items:center}
+.opt-l{font-family:var(--display);font-weight:700;width:26px;height:26px;border-radius:50%;background:var(--sunk);display:grid;place-items:center;font-size:13px}
+.opt-t{font-family:var(--display);font-weight:700;font-size:15.5px;line-height:1.25}
+.opt small{color:var(--bad);font-size:12px}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chips i{font-style:normal;font-size:11.5px;padding:2px 8px;border-radius:20px;background:var(--sunk);color:var(--ink2);white-space:nowrap}
+.chips i.cr{background:var(--warn-soft);color:var(--ink)} .chips i.cf{background:var(--purple-soft);color:var(--ink)}
+.deltas li{animation:pop .4s ease backwards}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.grow{background:var(--accent);color:var(--on-accent);border-radius:10px;padding:10px 14px;font-family:var(--display);font-weight:700;animation:pop .5s ease backwards}
+.idgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.idgrid div{background:var(--sunk);border-radius:10px;padding:9px 12px;display:flex;flex-direction:column;min-width:0}
+.idgrid span{font-size:12px;color:var(--ink2)} .idgrid b{font-family:var(--display);overflow-wrap:anywhere}
+.scene{border-radius:10px;max-width:100%}
+.scene text{font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif;fill:var(--ink)}
+.co{display:flex;flex-direction:column;gap:10px}
+.co-h{display:flex;justify-content:space-between;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.pill{font-size:12px;background:var(--sunk);border-radius:20px;padding:3px 10px;color:var(--ink2)}
+.sty{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;font-size:11.5px;color:var(--mute)}
+.sty div{display:flex;flex-direction:column;gap:3px;min-width:0} .sty div.on{color:var(--ink);font-weight:600}
+.sty span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sty s{display:block;height:6px;border-radius:3px;background:var(--sunk);overflow:hidden}
+.sty i{display:block;height:100%;transition:width .4s}
+.sty .sG{background:var(--good)} .sty .sC{background:var(--blue)} .sty .sI{background:var(--purple)} .sty .sR{background:var(--gold)}
+.kpi{border-left-width:4px}
+.kpi .n>span{display:flex;align-items:center;gap:6px;min-width:0}
+.ki{font-style:normal;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:13px;flex:none}
+.k-fin{border-left-color:var(--good)} .k-fin .ki{background:var(--accent-soft)}
+.k-mkt{border-left-color:var(--blue)} .k-mkt .ki{background:var(--blue-soft)}
+.k-inn{border-left-color:var(--purple)} .k-inn .ki{background:var(--purple-soft)}
+.k-rsk{border-left-color:var(--bad)} .k-rsk .ki{background:var(--bad-soft)}
+.kpi.chg{animation:flash .9s ease}
+@keyframes flash{0%{box-shadow:0 0 0 3px var(--warn-soft);transform:scale(1.03)}100%{box-shadow:0 0 0 0 transparent;transform:none}}
+.kpi .d{font-weight:500}
+.achs{display:flex;flex-wrap:wrap;gap:6px}
+.ach{font-size:12.5px;padding:4px 10px;border-radius:20px;border:1px dashed var(--line);color:var(--mute);filter:grayscale(1);opacity:.75}
+.ach.on{border:1px solid var(--gold);background:var(--gold-soft);color:var(--ink);filter:none;opacity:1;font-weight:600}
+.story li{padding-bottom:12px} .story b{display:block}
+#toasts{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;z-index:20;max-width:min(320px,calc(100vw - 32px))}
+.toast{background:var(--hud);color:var(--hud-ink);border-radius:12px;padding:10px 14px;font-size:13.5px;box-shadow:0 8px 24px rgba(0,0,0,.25);animation:pop .4s ease backwards;border-left:4px solid var(--gold)}
+.toast b{display:block;font-family:var(--display)}
+.type[aria-pressed="true"]{border-color:var(--blue);background:var(--blue-soft)}
+.how div:nth-child(1){background:var(--blue-soft)} .how div:nth-child(2){background:var(--accent-soft)} .how div:nth-child(3){background:var(--warn-soft)} .how div:nth-child(4){background:var(--purple-soft)}
+@media (prefers-reduced-motion:reduce){.deltas li,.grow,.toast,.kpi.chg{animation:none}.opt{transition:none}}
+@media (max-width:760px){.hud{grid-template-columns:minmax(0,1fr) auto}.hud .years{grid-column:1/-1;order:3}.hud .btn{grid-column:1/-1;order:4;justify-self:start}.idgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.sty{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+@media (max-width:960px){.setup{grid-template-columns:repeat(2,minmax(0,1fr))}.cards{grid-template-columns:minmax(0,1fr)}.grid{grid-template-columns:minmax(0,1fr)}.setup,.how{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:620px){.types{grid-template-columns:minmax(0,1fr)}.wrap{padding-inline:16px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.deltas,.end{grid-template-columns:minmax(0,1fr)}.rep{grid-template-columns:repeat(2,minmax(0,1fr))}.bar{grid-template-columns:minmax(0,1fr)}.score{grid-template-columns:minmax(0,1fr);justify-items:center}.bars{width:100%}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow" id="eyebrow">Juego de gestión empresarial · 5 años · 25 decisiones</div>
+      <h1 id="title">Simulador de Negocios</h1>
+    </div>
+    <div class="tools"><div id="acct" class="acct"></div>
+      <label class="tc" for="tc">TC <input id="tc" type="number" min="1" step="0.01" value="12"> Bs/USD</label>
+      <div class="seg" role="group" aria-label="Moneda">
+        <button id="cur-bs" aria-pressed="true">Bs</button>
+        <button id="cur-usd" aria-pressed="false">USD</button>
+      </div>
+    </div>
+  </header>
+  <main id="app"></main>
+</div>
+<div id="modal"></div>
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+/* ===== iconos propios (SVG en línea): no dependen de las fuentes de emoji del sistema ===== */
+const _c=(x,y,r)=>`<circle cx="${x}" cy="${y}" r="${r}"/>`,_r=(x,y,w,h,q=2)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${q}"/>`,_p=d=>`<path d="${d}"/>`;
+const ICON={
+ coin:_c(12,12,9)+_p('M14.5 9.3c-.4-1-1.3-1.6-2.5-1.6-1.500 0-2.5.8-2.5 2s1 1.800 2.5 2.200 2.500 1 2.500 2.300-1 2-2.500 2c-1.200 0-2.100-.600-2.500-1.600M12 6v1.700M12 16.300V18'),
+ up:_p('M3 17l6-6 4 4 8-8M15 7h6v6'),down:_p('M3 7l6 6 4-4 8 8M15 17h6v-6'),
+ users:_c(9,8,3)+_p('M3 20c0-3.300 2.700-6 6-6s6 2.700 6 6M16 14.200c2.900.300 5 2.600 5 5.800')+_c(17,9,2.5),
+ user:_c(12,8,4)+_p('M4 21c0-4.400 3.600-8 8-8s8 3.600 8 8'),
+ building:_p('M5 21V4h10v17M15 9h4v12M3 21h18M8 8h1M11 8h1M8 12h1M11 12h1M8 16h1M11 16h1'),
+ bars:_p('M5 20V11M11 20V5M17 20v-7M2 20h20'),
+ card:_r(3,6,18,13)+_p('M3 10.500h18M7 15h3'),
+ star:_p('M12 3l2.700 5.600 6.100.900-4.400 4.300 1 6.100L12 17l-5.400 2.900 1-6.100-4.400-4.300 6.100-.900z'),
+ warn:_p('M12 4l9 16H3zM12 10v4M12 17v.500'),
+ tag:_p('M3 12V4h8l10 10-8 8zM7.500 8v.500'),
+ box:_p('M3 8l9-5 9 5v8l-9 5-9-5zM3 8l9 5 9-5M12 13v8'),
+ receipt:_p('M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6'),
+ factory:_p('M3 21V10l6 4v-4l6 4V5h4v16zM2 21h20'),
+ smile:_c(12,12,9)+_p('M8.500 14.500c1 1.300 2.200 2 3.500 2s2.500-.700 3.500-2M9 9.500v.500M15 9.500v.500'),
+ frown:_c(12,12,9)+_p('M8.500 16c1-1.300 2.200-2 3.500-2s2.500.700 3.500 2M9 9.500v.500M15 9.500v.500'),
+ gear:_c(12,12,3.5)+_p('M12 2v3M12 19v3M2 12h3M19 12h3M4.900 4.900l2.100 2.100M17 17l2.100 2.100M4.900 19.100L7 17M17 7l2.100-2.100'),
+ bulb:_p('M9 18h6M10 21h4M8 14a6 6 0 118 0c-.700.700-1 1.500-1 2.500H9c0-1-.300-1.800-1-2.500z'),
+ mega:_p('M3 10v4h3l8 5V5l-8 5zM17.500 9a4 4 0 010 6'),
+ drop:_p('M12 3c4 5 6 8 6 11a6 6 0 01-12 0c0-3 2-6 6-11z'),
+ cart:_p('M3 4h3l2.500 11h9.500l2-8H7M10 20v.500M17 20v.500'),
+ bank:_p('M3 10l9-6 9 6zM5 10v8M9.500 10v8M14.500 10v8M19 10v8M3 20h18'),
+ cap:_p('M2 9l10-5 10 5-10 5zM6 11.500V16c2 2 10 2 12 0v-4.500M22 9v6'),
+ swords:_p('M4 4l12 12M20 4L8 16M14 18l4-4M6 14l4 4M4 20l3-3M20 20l-3-3'),
+ scissors:_c(6,7,3)+_c(6,17,3)+_p('M8.500 8.500L20 18M8.500 15.500L20 6'),
+ flask:_p('M9 3h6M10 3v6l-5 9a2 2 0 002 3h10a2 2 0 002-3l-5-9V3M7.500 15h9'),
+ laptop:_r(4,5,16,11,1.5)+_p('M2 19h20'),
+ shield:_p('M12 3l8 3v6c0 5-3.500 8-8 9-4.500-1-8-4-8-9V6z'),
+ hands:_p('M2 9l4-2 4 2 2-1 2 1 4-2 4 2M6 7v7l4 4 2-1 2 1 4-4V7M10 12l2 2 2-2'),
+ globe:_c(12,12,9)+_p('M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18'),
+ truck:_p('M2 7h11v9H2zM13 10h5l3 3v3h-8')+_c(6.5,18,2)+_c(17,18,2),
+ phone:_r(7,3,10,18)+_p('M11 17.500h2'),
+ fist:_p('M7 11V8a2 2 0 014 0v2M11 9V7a2 2 0 014 0v3M15 9a2 2 0 014 0v5a7 7 0 01-7 7h-1a6 6 0 01-5-3l-2-4a1.800 1.800 0 013-2l1 1'),
+ rocket:_p('M9 15l-1-4c2-5 6-8 12-8 0 6-3 10-8 12zM8 11l-4 1 3 3M13 16l-1 4 3-3M5 19l2-2')+_c(15,9,1.5),
+ cone:_p('M10 4h4l5 16H5zM7.500 13h9M3 20h18'),
+ heart:_p('M12 20S3 14 3 8.500A4.500 4.500 0 0112 6a4.500 4.500 0 019 2.500C21 14 12 20 12 20zM12 6l-2 4 4 2-2 4'),
+ dice:_r(4,4,16,16,3)+_p('M9 9v.500M15 15v.500M15 9v.500M9 15v.500M12 12v.500'),
+ pause:_p('M9 6v12M15 6v12'),
+ hourglass:_p('M6 3h12M6 21h12M7 3c0 5 10 5 10 9s-10 4-10 9M17 3c0 5-10 5-10 9s10 4 10 9'),
+ trophy:_p('M8 4h8v5a4 4 0 01-8 0zM8 6H4c0 3 1.500 5 4 5M16 6h4c0 3-1.500 5-4 5M12 13v4M8 21h8M10 17h4'),
+ crown:_p('M3 18L2 8l6 5 4-8 4 8 6-5-1 10zM3 21h18'),
+ target:_c(12,12,9)+_c(12,12,5)+_c(12,12,1),
+ calendar:_r(3,5,18,16)+_p('M3 10h18M8 3v4M16 3v4'),
+ medal:_c(12,15,5)+_p('M9 3l3 7 3-7'),
+ bolt:_p('M13 2L4 14h7l-1 8 9-12h-7z'),
+ storm:_p('M7 15a4 4 0 010-8 5 5 0 019.600-1A4 4 0 0117 15zM11 15l-2 4h3l-1 3'),
+ plate:_c(12,12,8)+_c(12,12,4),
+ refresh:_p('M4 12a8 8 0 0113.700-5.700L20 8M20 4v4h-4M20 12a8 8 0 01-13.700 5.700L4 16M4 20v-4h4'),
+ pin:_p('M12 21s7-6 7-11a7 7 0 00-14 0c0 5 7 11 7 11z')+_c(12,10,2.5),
+ compass:_c(12,12,9)+_p('M15.500 8.500l-2 5-5 2 2-5z'),
+ minus:_p('M5 12h14'),check:_p('M4 12l5 5 11-11')
+};
+const EMO={'🧑‍💼':'user','💰':'coin','💵':'coin','📈':'up','📉':'down','👥':'users','👤':'user','🏢':'building','🏬':'building','🏪':'building','📊':'bars','💳':'card','⭐':'star','⚠':'warn','🏷':'tag','📦':'box','🧾':'receipt','📋':'receipt','🏭':'factory','🏗':'factory','😊':'smile','😟':'frown','⚙':'gear','🔧':'gear','💡':'bulb','📣':'mega','📺':'mega','💧':'drop','🛒':'cart','🏦':'bank','🎓':'cap','⚔':'swords','✂':'scissors','🧪':'flask','💻':'laptop','🤖':'laptop','🛡':'shield','🤝':'hands','🌎':'globe','🚚':'truck','🛵':'truck','📱':'phone','✊':'fist','🚀':'rocket','🚧':'cone','💔':'heart','🎲':'dice','⏸':'pause','➖':'minus','⏳':'hourglass','🏆':'trophy','🎉':'trophy','👑':'crown','🎯':'target','📅':'calendar','🎖':'medal','⚡':'bolt','✨':'bolt','💥':'bolt','⛈':'storm','🍽':'plate','🔄':'refresh','📍':'pin','🧭':'compass','✅':'check'};
+const EMO_RE=new RegExp(Object.keys(EMO).sort((a,b)=>b.length-a.length).join('|'),'g');
+const ico=n=>`<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICON[n]}</svg>`;
+const iconize=h=>h.replace(EMO_RE,m=>ico(EMO[m])).replace(/️/g,'');
+/* ===== utilidades ===== */
+const $=id=>document.getElementById(id);
+const clamp=(x,a=0,b=100)=>Math.max(a,Math.min(b,x));
+let CUR='Bs',TC=12;
+const rate=()=>CUR==='USD'?TC:1;
+const nf=(x,d=0)=>new Intl.NumberFormat('es-BO',{maximumFractionDigits:d}).format(x);
+const sym=()=>CUR==='USD'?'$us ':'Bs ';
+const money=(x,d=0)=>{const y=x/rate();return (y<0?'−':'')+sym()+nf(Math.abs(y),d)};
+const smoney=x=>(x>=0?'+':'')+money(x);
+const short=x=>{const y=x/rate(),a=Math.abs(y);return (y<0?'−':'')+(a>=1e6?nf(a/1e6,1)+' M':a>=1e3?nf(a/1e3,a<1e4?1:0)+' mil':nf(a))};
+const pct=(x,d=0)=>nf(x*100,d)+'%';
+const rnd=()=>Math.random();
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+/* ===== tipos de negocio (valores de ejemplo, por año) ===== */
+const BIZ={
+ delivery:{name:'Delivery / Taxis',desc:'App que cobra comisión por cada pedido o viaje',def:'RápidoYa',
+  c:'usuarios',u:'pedidos',prov:'los conductores afiliados',nuevo:'un servicio de envíos para empresas',suc:'operar en una segunda ciudad',inv:'la red de conductores',ext:'Perú',prod:'la app',
+  cust:4000,freq:30,price:6,vc:2.6,fixedO:150000,emp:5,sal:42000,cap:135000,cash:150000,M:33000,inno:35,
+  pro:'La demanda crece sola y el negocio escala rápido',con:'Depende del personal, la capacidad se agota y hay más conflictos laborales',
+  p:{g0:.03,upe:1.25,noise:.08,ev:{huelga:2.2,proveedor:1.6,boom:1.4}}},
+ ecommerce:{name:'Compra y venta por internet',desc:'Compras productos y los revendes en línea',def:'TiendaClic',
+  c:'clientes',u:'unidades',prov:'tu proveedor mayorista',nuevo:'una línea de productos con marca propia',suc:'abrir un punto de entrega en otra ciudad',inv:'el inventario',ext:'Chile',prod:'la tienda en línea',
+  cust:1000,freq:3,price:180,vc:115,fixedO:62000,emp:2,sal:30000,cap:3400,cash:50000,M:8500,inno:20,
+  pro:'Ampliar capacidad es barato y la innovación rinde más',con:'Sin marketing pierdes clientes; mucha competencia y clientes sensibles al precio y a la reputación',
+  p:{g0:-.025,repK:1.6,mkK:1.25,capK:1.4,priceK:1.35,innoK:1.6,upe:1.7,noise:.06,ev:{competidor:2.2,reputacion:1.8,tecno:1.5}}},
+ comida:{name:'Lugar de comida',desc:'Restaurante, pensión, café o comida rápida',def:'Sabor Camba',
+  c:'comensales',u:'platos',prov:'tus proveedores de alimentos',nuevo:'una línea de platos saludables',suc:'abrir una segunda sucursal',inv:'la cocina y la despensa',ext:'Argentina',prod:'el menú',
+  cust:780,freq:24,price:35,vc:14.5,fixedO:130000,emp:5,sal:33600,cap:21000,cash:60000,M:6500,inno:15,
+  pro:'Demanda estable y buen margen por plato',con:'El local limita cuánto puedes atender, los insumos suben fuerte y el mercado de la zona se satura',
+  p:{g0:0,mkK:.85,capK:.7,vcK:1.3,sat:2.1,upe:1.25,noise:.03,ev:{proveedor:1.8,falla:1.6,huelga:1.4}}}
+};
+const LEVELS=[null,
+ {n:'Emprendedor',d:'Decisiones básicas: precio, primeros clientes, primeras contrataciones.'},
+ {n:'Gerente',d:'Decisiones financieras y comerciales: deuda, costos, competencia.'},
+ {n:'Director',d:'Decisiones estratégicas: expansión, tecnología, nuevos productos.'},
+ {n:'CEO',d:'Decisiones complejas con consecuencias de largo plazo.'},
+ {n:'CEO',d:'Último año: lo que decidas ahora define cómo termina la empresa.'}];
+
+/* ===== glosario ===== */
+const GL={
+ flujo:['Flujo de caja','Es el movimiento de dinero que entra y sale de la empresa. Una empresa puede tener utilidades y aun así quedarse sin efectivo, por ejemplo si vende a crédito o invierte más de lo que cobra.'],
+ equilibrio:['Punto de equilibrio','Es la cantidad que debes vender para cubrir todos tus costos. Por debajo pierdes; por encima ganas. Se calcula dividiendo los costos fijos entre la ganancia que deja cada unidad.'],
+ margen:['Margen','Es la parte de cada venta que queda después de pagar lo que cuesta producirla o entregarla. Con margen bajo necesitas vender mucho más para ganar lo mismo.'],
+ deuda:['Deuda y apalancamiento','Endeudarte permite crecer con dinero ajeno, pero cada año pagas intereses y capital aunque las ventas bajen. Cuanta más deuda respecto a tus ventas, más riesgo.'],
+ share:['Participación de mercado','Es el porcentaje de todos los clientes posibles del mercado que te compran a ti. Sube cuando creces más rápido que tus competidores.'],
+ fijos:['Costos fijos y variables','Los fijos se pagan vendas o no (sueldos, alquiler). Los variables crecen con cada venta (insumos, envíos, comisiones). Subir los fijos eleva tu punto de equilibrio.'],
+ capacidad:['Capacidad','Es lo máximo que puedes atender en un año. Si la demanda supera tu capacidad pierdes esas ventas y los clientes se van insatisfechos.'],
+ valor:['Valor de la empresa','Estimación de cuánto vale el negocio: aquí se calcula con 3,5 veces la utilidad anual, más una parte de las ventas, más la caja y menos la deuda, ajustado por reputación e innovación.'],
+ riesgo:['Nivel de riesgo','Mide qué tan cerca está la empresa de una crisis. Sube con la deuda, con poca caja para cubrir los gastos, con pérdidas y con mala reputación.'],
+ reputacion:['Reputación','Es lo que el mercado piensa de tu empresa. Una buena reputación atrae clientes sin gastar en publicidad y te protege cuando llega un competidor.'],
+ utilidad:['Utilidad','Lo que queda de las ventas después de pagar costos variables, gastos fijos, intereses y el impuesto a las utilidades (IUE, 25% en Bolivia).'],
+ productividad:['Productividad','Cuánto logra tu equipo con los mismos recursos. Más productividad permite atender más con la misma capacidad instalada.'],
+ liquidez:['Liquidez','Es tener efectivo disponible para pagar a tiempo. Se mide en cuántos meses de gastos puedes cubrir con tu caja.'],
+ ventas:['Ventas','Unidades vendidas multiplicadas por el precio. Dependen de cuántos clientes tienes, cuánto compra cada uno y cuánto puedes atender.'],
+ clientes:['Clientes','Personas que te compran de forma habitual. Crecen con marketing, reputación y satisfacción; se pierden con mal servicio o cuando un competidor ofrece algo mejor.']
+};
+
+/* ===== decisiones =====
+ Efectos (e): cash, fixed, debt y pay se miden como fracción de las ventas anuales (S). cust, price, vc, cap son cambios porcentuales.
+ emp es número de empleados; empP porcentaje. rep, sat, prod, inno son puntos. g es impulso de crecimiento. rate cambia la tasa de interés.
+ later: efectos que llegan en años siguientes. f(s): ajuste según el estado de la empresa. alt: resultado incierto con probabilidad p(s). */
+const D=[
+/* --- Nivel 1 --- */
+{id:'precio1',a:'Precios',lv:1,c:'margen',s:'Tus primeros {c} dicen que tu precio es bueno. Un asesor cree que estás cobrando muy poco.',o:[
+ {l:'Subir el precio 8%',e:{price:.08,cust:-.04},f:s=>s.rep<45?{e:{cust:-.04},t:'Como tu reputación todavía es baja, se fueron más {c} de lo normal.'}:null,w:'Subir el precio mejora lo que ganas por cada venta, pero algunos clientes sensibles al precio se van. Con buena reputación se van menos.'},
+ {l:'Mantener el precio',e:{},w:'No cambiar nada conserva tu situación actual: ni ganas margen ni arriesgas clientes.'},
+ {l:'Bajar el precio 8% para ganar mercado',e:{price:-.08,cust:.09},w:'Un precio menor atrae clientes, pero cada venta deja menos. Solo conviene si el volumen extra compensa el margen perdido.'},
+ {l:'Crear una versión básica y otra premium: {$0.02}',e:{cash:-.02,price:.04,cust:.01,fixed:.015,inno:3},w:'Segmentar permite cobrar más a quien valora más, sin perder a quien busca precio. Cuesta un poco más de gestionar.'}]},
+{id:'mkt1',a:'Marketing',lv:1,c:'clientes',s:'Casi nadie te conoce fuera de tu zona. Necesitas decidir cuánto invertir en darte a conocer.',o:[
+ {l:'Campaña fuerte: {$0.06} ahora',mk:1,e:{cash:-.06,g:.10,rep:3},later:[{y:1,e:{cust:.04},t:'La campaña del año pasado sigue trayendo {c}.'}],flag:'mktBig',w:'La publicidad gasta caja hoy y trae clientes durante varios meses. El riesgo es crecer más rápido de lo que puedes atender.'},
+ {l:'Redes sociales propias: {$0.01} al año',mk:1,e:{fixed:.01,g:.04},w:'Un gasto pequeño y constante construye audiencia de a poco, sin comprometer la caja.'},
+ {l:'Programa de referidos: {$0.01}',e:{cash:-.01,g:.03,sat:3},w:'Premiar a quien te recomienda cuesta poco y trae clientes que ya confían en ti.'},
+ {l:'No invertir todavía',e:{g:-.02},later:[{y:1,e:{cust:-.03},t:'Tu competidor ganó la visibilidad que tú no buscaste.'}],w:'Conservas el efectivo, pero el mercado no espera: quien sí se promociona se queda con los clientes nuevos.'}]},
+{id:'credito',a:'Flujo de caja',lv:1,c:'flujo',s:'Una empresa grande quiere comprarte todos los meses, pero pagando a 60 días.',o:[
+ {l:'Aceptar la venta a crédito',e:{cust:.06,cash:-.04},alt:{p:s=>.6+(s.flags.sistema||s.flags.contador?.25:0),ok:{t:'El cliente paga puntual, aunque tu dinero queda atrapado 60 días.'},no:{e:{cash:-.03},t:'El cliente se atrasó y una parte quedó incobrable.'}},w:'Vender a crédito sube las ventas, pero el dinero tarda en llegar. Mientras tanto tú sí pagas sueldos y proveedores.'},
+ {l:'Aceptar solo con 50% de adelanto',e:{cust:.03,cash:-.01},w:'El adelanto reduce el dinero atrapado y filtra a los clientes que no piensan pagar.'},
+ {l:'Vender solo al contado',e:{},w:'Proteges tu caja a costa de renunciar a una venta grande.'}]},
+{id:'contratar',a:'Contratación',lv:1,c:'capacidad',s:'No das abasto: tú y tu equipo hacen de todo y los {c} empiezan a esperar.',o:[
+ {l:'Ampliar el equipo 20%',e:{emp:2,cap:.20,prod:4,sat:4,g:.03},later:[{y:1,e:{prod:3},t:'Las personas que contrataste ya dominan su trabajo.'}],w:'Más personal sube tu capacidad, pero también tus costos fijos: los sueldos se pagan aunque las ventas bajen.'},
+ {l:'Ampliar el equipo 10%',e:{emp:1,cap:.10,sat:2},w:'Un paso prudente: amplías capacidad sin subir demasiado el punto de equilibrio.'},
+ {l:'Seguir igual y hacer horas extra',e:{prod:-5,sat:-3},later:[{y:1,e:{sat:-4,prod:-3},t:'El agotamiento del equipo ya se nota en el servicio.'}],w:'A corto plazo ahorras; a mediano plazo el cansancio baja la calidad y los clientes lo sienten.'},
+ {l:'Tercerizar parte del trabajo',e:{vc:.04,cap:.15},w:'Tercerizar convierte un costo fijo en variable: pagas solo cuando vendes, pero cada venta deja menos.'}]},
+{id:'proveedor1',a:'Compras',lv:1,c:'fijos',s:'{Prov} te ofrecen 8% de descuento si pagas por adelantado lo de todo el año.',o:[
+ {l:'Pagar por adelantado: {$0.08}',e:{cash:-.08,vc:-.08},w:'Bajas tu costo por unidad, pero inmovilizas efectivo. Es buena idea solo si la caja aguanta.'},
+ {l:'Pedir 30 días de plazo en vez del descuento',e:{cash:.03},w:'El plazo de pago es financiamiento gratis: mejora tu caja sin endeudarte.'},
+ {l:'Buscar un segundo proveedor',e:{cash:-.005,vc:-.03},flag:'dosProv',w:'Tener dos proveedores te da poder de negociación y te protege si uno falla.'},
+ {l:'Seguir como estás',e:{},w:'No cambias nada: ni ahorras ni te expones.'}]},
+{id:'control',a:'Finanzas',lv:1,c:'utilidad',s:'Llevas las cuentas en un cuaderno y no sabes con exactitud cuánto ganas.',o:[
+ {l:'Comprar un sistema de ventas y contabilidad: {$0.02}',e:{cash:-.02,prod:6,inno:5},flag:'sistema',later:[{y:1,e:{fixed:-.01},t:'Con tu sistema de control detectaste gastos innecesarios y los cortaste.'}],w:'Saber tus números reales permite detectar fugas y decidir con datos en vez de intuición.'},
+ {l:'Contratar un contador externo: {$0.012} al año',e:{fixed:.012,prod:4},flag:'contador',w:'Un contador ordena tus obligaciones y evita multas, a cambio de un gasto fijo.'},
+ {l:'Armar una planilla de Excel',e:{prod:2},w:'Es mejor que nada y no cuesta, pero depende de que la actualices con disciplina.'},
+ {l:'Seguir con el cuaderno',e:{},flag:'sinControl',later:[{y:1,e:{cash:-.02,rep:-2},t:'Sin registros ordenados, te llegó una multa por errores en tus declaraciones.'}],w:'Sin registros confiables, los problemas se descubren tarde.'}]},
+/* --- Nivel 2 --- */
+{id:'ventasCaen',a:'Ventas',lv:2,c:'ventas',s:'Las ventas del último trimestre bajaron 12%. El equipo espera tu respuesta.',pre:s=>({e:{cust:-.04},t:'Ya perdiste parte de tus {c} este trimestre.'}),o:[
+ {l:'Aumentar la publicidad: {$0.04}',mk:1,e:{cash:-.04,g:.07},w:'La publicidad recupera clientes si el problema era visibilidad. Si el problema es el producto, solo acelera el gasto.'},
+ {l:'Reducir los precios 7%',e:{price:-.07,cust:.08},w:'Bajar precios recupera volumen rápido, pero es difícil volver a subirlos después.'},
+ {l:'Lanzar {nuevo}: {$0.07}',e:{cash:-.07,inno:10},alt:{p:s=>.4+s.inno/200,ok:{e:{cust:.12,price:.03},t:'El lanzamiento gusta y atrae {c} nuevos.'},no:{e:{cust:.02},t:'El lanzamiento pasa casi desapercibido.'}},w:'Un producto nuevo puede reactivar la demanda, pero su éxito no está garantizado. Las empresas más innovadoras aciertan más seguido.'},
+ {l:'Reducir gastos operativos',e:{fixed:-.03,sat:-3,prod:-2},w:'Recortar protege la utilidad hoy, pero no ataca la causa de la caída y puede dañar el servicio.'}]},
+{id:'prestamo',a:'Endeudamiento',lv:2,c:'deuda',s:'El banco te ofrece un préstamo de {$0.25} para crecer.',o:[
+ {l:'Tomarlo todo y ampliar la capacidad',e:{debt:.25,cash:.08,cap:.30,emp:2,g:.05},f:s=>met(s).risk>40?{e:{rate:.04},t:'El banco te ve como cliente riesgoso y te subió la tasa de interés.'}:null,flag:'prestamo',w:'El préstamo te da capacidad para vender más, pero pagarás intereses y capital cada año. Si las ventas no crecen, la deuda pesa.'},
+ {l:'Tomar la mitad como colchón de caja',e:{debt:.12,cash:.12},w:'Tener reserva te protege en una crisis, aunque pagar intereses por dinero quieto tiene un costo.'},
+ {l:'Buscar un socio en lugar del banco',e:{cash:.20,own:-.2},flag:'socio',later:[{y:2,e:{cash:-.05},t:'Tu socio cobró su parte de las utilidades.'}],w:'Un socio no cobra intereses, pero comparte las ganancias futuras y opina en las decisiones.'},
+ {l:'No endeudarse',e:{},w:'Creces más lento, pero sin compromisos fijos con el banco.'}]},
+{id:'inventario',a:'Inventarios',lv:2,c:'capacidad',s:'En las horas y fechas de más demanda no alcanzas a atender y pierdes ventas.',o:[
+ {l:'Ampliar {inv}: {$0.06}',e:{cash:-.06,cap:.25,sat:4},w:'Más capacidad evita ventas perdidas, pero es dinero inmovilizado si la demanda no llega.'},
+ {l:'Usar un sistema de pronóstico de demanda: {$0.02}',e:{cash:-.02,cap:.10,prod:5,inno:4},w:'Anticipar la demanda permite atender más con lo mismo.'},
+ {l:'Trabajar con lo mínimo para liberar caja',e:{cash:.03,cap:-.05,sat:-4},w:'Menos recursos parados mejora la caja, pero cualquier pico de demanda te deja sin poder atender.'},
+ {l:'Dejarlo así',e:{sat:-3},w:'Los clientes que no logras atender se acuerdan.'}]},
+{id:'capacitar',a:'Capacitación',lv:2,c:'productividad',s:'Tu equipo comete errores que cuestan dinero y tiempo.',o:[
+ {l:'Programa de capacitación: {$0.02}',e:{cash:-.02,prod:8,sat:3},f:s=>s.flags.despidos?(delete s.flags.despidos,{e:{sat:4,rep:3},t:'Después de los despidos, invertir en tu gente recompuso el ambiente y tu imagen como empleador.'}):null,later:[{y:1,e:{prod:4},t:'La capacitación maduró: tu equipo trabaja mejor.'}],w:'Capacitar cuesta hoy y rinde durante años: es una inversión, no un gasto.'},
+ {l:'Bonos por desempeño: {$0.015} al año',e:{fixed:.015,prod:6},w:'Los incentivos alinean al equipo con los resultados, pero se vuelven un costo permanente.'},
+ {l:'Reemplazar a quienes rinden menos',e:{cash:-.015,prod:5,sat:-5,rep:-2},flag:'despidos',later:[{y:1,e:{prod:-3,rep:-2},t:'Tras los despidos del año pasado, hubo renuncias y se habla mal de la empresa como empleador.'}],w:'Mejora el rendimiento rápido, pero daña el ambiente laboral y puede provocar renuncias.'},
+ {l:'No hacer nada',e:{prod:-3},w:'Los errores se repiten y se vuelven costumbre.'}]},
+{id:'quejas',a:'Clientes',lv:2,c:'reputacion',s:'Las quejas en redes sociales están aumentando.',o:[
+ {l:'Crear un puesto de atención al cliente',e:{emp:1,sat:10,rep:4},w:'Atender bien retiene clientes, y retener es más barato que conseguir nuevos.'},
+ {l:'Compensar a los afectados: {$0.015}',e:{cash:-.015,sat:5,rep:3},w:'Resuelve el momento, pero no cambia la causa de las quejas.'},
+ {l:'Programa de fidelización: {$0.012} al año',e:{fixed:.012,sat:7,g:.03},w:'Premiar la recompra hace que tus clientes vuelvan y te recomienden.'},
+ {l:'Ignorarlas',e:{sat:-6,rep:-6},later:[{y:1,e:{cust:-.05},t:'Las quejas sin respuesta espantaron a {c}.'}],w:'Una queja ignorada en público la leen cientos de posibles clientes.'}]},
+{id:'copia',a:'Competencia',lv:2,c:'share',s:'Un competidor copia tu oferta y cobra 10% menos.',o:[
+ {l:'Entrar en guerra de precios',e:{price:-.10,cust:.04},later:[{y:1,e:{price:-.02},t:'El mercado se acostumbró a los precios bajos de la guerra de precios.'}],w:'Igualar precios defiende clientes, pero reduce el margen de todos. Gana quien tiene costos más bajos.'},
+ {l:'Diferenciarte por calidad: {$0.03}',e:{cash:-.03,vc:.02,rep:6,sat:5},w:'Competir por calidad protege tu precio y construye reputación.'},
+ {l:'Aliarte con él para comprar juntos',e:{vc:-.04,inno:-2},w:'Comprar en conjunto baja costos para ambos, aunque te vuelve más parecido a tu rival.'},
+ {l:'No reaccionar',e:{cust:-.07},w:'Los clientes sensibles al precio se cambian.'}]},
+{id:'costos',a:'Reducción de costos',lv:2,c:'fijos',s:'Tus gastos fijos crecieron más rápido que tus ventas.',o:[
+ {l:'Recorte general de gastos',e:{fixed:-.05,prod:-4,sat:-3},later:[{y:1,e:{cust:-.03},t:'El recorte de gastos se notó en el servicio y algunos {c} se fueron.'}],w:'El recorte parejo es rápido, pero corta también lo que sí generaba valor.'},
+ {l:'Renegociar alquiler y servicios',e:{fixed:-.02},w:'Negociar contratos baja costos sin afectar la operación.'},
+ {l:'Automatizar tareas: {$0.04}',e:{cash:-.04,fixed:-.03,inno:6,prod:3},w:'Automatizar exige inversión inicial y reduce costos todos los años siguientes.'},
+ {l:'Mantener los gastos',e:{},w:'Tu punto de equilibrio sigue alto.'}]},
+/* --- Nivel 3 --- */
+{id:'sucursal',a:'Apertura de sucursales',lv:3,c:'equilibrio',s:'Aparece la oportunidad de {suc}.',o:[
+ {l:'Hacerlo con un préstamo de {$0.35}',e:{debt:.35,cap:.6,fixed:.06,emp:3,cust:.12,g:.12},flag:'sucursal',later:[{y:1,e:{cust:.08},t:'La nueva sede ya tiene clientela propia.'}],w:'Expandirse con deuda acelera el crecimiento, pero duplica los compromisos: más costos fijos y cuotas al banco.'},
+ {l:'Hacerlo con caja propia: {$0.35}',e:{cash:-.35,cap:.6,fixed:.06,emp:3,cust:.12,g:.12},flag:'sucursal',later:[{y:1,e:{cust:.08},t:'La nueva sede ya tiene clientela propia.'}],f:s=>s.cash<0?{t:'No tenías caja suficiente: quedaste en rojo y tendrás que cubrirlo con crédito caro.'}:null,w:'Usar tu propio dinero evita intereses, pero te deja sin colchón si algo sale mal.'},
+ {l:'Dar una franquicia a un tercero',e:{cash:.05,g:.08,rep:-2},flag:'franquicia',later:[{y:1,e:{cash:.04,sat:-3},t:'La franquicia te pagó regalías, pero su servicio es disparejo.'}],w:'La franquicia crece con dinero ajeno; a cambio pierdes control sobre la calidad.'},
+ {l:'No expandirse por ahora',e:{},w:'Consolidar lo que tienes es válido, aunque otro puede ocupar ese espacio.'}]},
+{id:'nuevoProd',a:'Nuevos productos',lv:3,c:'ventas',s:'Tu equipo propone lanzar {nuevo}.',o:[
+ {l:'Desarrollo completo: {$0.10}',e:{cash:-.10,inno:15},alt:{p:s=>.35+s.inno/150,ok:{e:{cust:.15,price:.05,rep:5},t:'El lanzamiento es un éxito.'},no:{e:{rep:-2},t:'El producto no encontró su público.'}},w:'Innovar a fondo puede cambiar el tamaño de la empresa, pero es una apuesta. La experiencia innovando mejora las probabilidades.'},
+ {l:'Piloto pequeño: {$0.03}',e:{cash:-.03,inno:7,cust:.03},w:'Probar en pequeño limita la pérdida y enseña qué quiere el cliente.'},
+ {l:'Copiar lo que ya funciona en el mercado',e:{cash:-.02,cust:.04,inno:-3},w:'Imitar es barato y seguro, pero no te diferencia.'},
+ {l:'No lanzar nada',e:{},w:'Tu oferta envejece mientras la de otros se renueva.'}]},
+{id:'tecnologia',a:'Tecnología',lv:3,c:'productividad',s:'Una plataforma de gestión integraría ventas, compras y finanzas de toda la empresa.',o:[
+ {l:'Implementarla completa: {$0.08}',e:{cash:-.08,prod:10,inno:8},later:[{y:1,e:{fixed:-.02,sat:4},t:'La plataforma redujo errores y gastos administrativos.'}],w:'La tecnología cuesta al inicio y luego ahorra todos los años.'},
+ {l:'Versión básica: {$0.03}',e:{cash:-.03,prod:4},w:'Resuelve lo urgente con poco dinero.'},
+ {l:'Desarrollo a medida con un préstamo de {$0.12}',e:{debt:.12,prod:12,inno:12,cap:.10},w:'Una solución propia puede ser una ventaja competitiva, pagada con deuda.'},
+ {l:'Seguir con los procesos actuales',e:{},later:[{y:1,e:{prod:-4},t:'Tus procesos quedaron lentos frente a los de la competencia.'}],w:'No invertir en tecnología no es gratis: el atraso se acumula.'}]},
+{id:'riesgos',a:'Gestión de riesgos',lv:3,c:'riesgo',s:'El directorio pregunta qué pasaría si mañana ocurre un imprevisto grave.',o:[
+ {l:'Contratar un seguro integral: {$0.012} al año',e:{fixed:.012},flag:'seguro',w:'El seguro es un costo seguro que evita una pérdida grande e incierta.'},
+ {l:'Diversificar proveedores y clientes: {$0.02}',e:{cash:-.02,vc:.01},flag:'dosProv',w:'No depender de uno solo reduce el daño cuando alguno falla.'},
+ {l:'Pagar deuda por adelantado',e:{pay:.15},w:'Menos deuda significa menos intereses y más resistencia ante una crisis.'},
+ {l:'No hacer nada',e:{},w:'El riesgo no desaparece por no mirarlo.'}]},
+{id:'talento',a:'Recursos humanos',lv:3,c:'productividad',s:'Tu mejor gerente recibió una oferta de la competencia.',o:[
+ {l:'Igualar la oferta: {$0.015} al año',e:{fixed:.015,prod:2},w:'Retener cuesta menos que reemplazar, pero otros pedirán lo mismo.'},
+ {l:'Ofrecerle participación en los resultados',e:{fixed:.008,prod:6,sat:2},w:'Quien gana cuando la empresa gana, cuida la empresa.'},
+ {l:'Dejarlo ir',e:{prod:-8},alt:{p:s=>.25+s.sat/200,ok:{t:'Se va en buenos términos.'},no:{e:{cust:-.05},t:'Se llevó a varios {c} con él.'}},w:'Perder a alguien clave se paga en conocimiento y, a veces, en clientes.'},
+ {l:'Plan de carrera para todo el equipo: {$0.02}',e:{cash:-.02,prod:5,sat:2},w:'Un plan de carrera reduce la rotación de todos, no solo de uno.'}]},
+{id:'inflacion',a:'Precios',lv:3,c:'margen',s:'La inflación subió tus costos este año.',pre:s=>({e:{vc:.06},t:'Tu costo por unidad subió 6%.'}),o:[
+ {l:'Trasladar todo el aumento al precio',e:{price:.06,cust:-.05},f:s=>s.sat>65?{e:{cust:.03},t:'Tus {c} están satisfechos y casi todos aceptaron el aumento.'}:null,w:'Clientes satisfechos toleran mejor un aumento de precio.'},
+ {l:'Trasladar la mitad',e:{price:.03,cust:-.02},w:'Compartes el golpe entre tu margen y tu cliente.'},
+ {l:'Absorber el aumento',e:{rep:3,sat:3},w:'Ganas simpatía y pierdes margen.'},
+ {l:'Rediseñar la oferta para bajar costos: {$0.03}',e:{cash:-.03,vc:-.04,inno:4},w:'Cambiar cómo produces ataca la causa en vez de pasar la factura.'}]},
+{id:'marca',a:'Publicidad',lv:3,c:'reputacion',s:'Te proponen auspiciar el principal evento de la ciudad.',o:[
+ {l:'Gran auspicio: {$0.07}',mk:1,e:{cash:-.07,rep:10,g:.06},later:[{y:1,e:{cust:.03},t:'Tu marca quedó en la memoria de la gente tras el auspicio.'}],w:'La publicidad de marca construye reputación, aunque su efecto en ventas es difícil de medir.'},
+ {l:'Marketing digital con resultados medibles: {$0.03}',mk:1,e:{cash:-.03,g:.06},w:'Pagar por resultado permite saber qué funciona.'},
+ {l:'Programa de responsabilidad social: {$0.02}',e:{cash:-.02,rep:7,sat:2},w:'Aportar a la comunidad mejora la imagen de forma duradera.'},
+ {l:'No participar',e:{},w:'Ahorras hoy; tu marca sigue igual de conocida.'}]},
+/* --- Nivel 4 --- */
+{id:'internacional',a:'Expansión',lv:4,c:'riesgo',s:'Un socio te propone llevar la empresa a {ext}.',o:[
+ {l:'Entrar con operación propia y un préstamo de {$0.40}',e:{debt:.40,fixed:.08,cap:.30,emp:2},flag:'export',alt:{p:s=>.3+s.rep/200+s.inno/400,ok:{e:{cust:.45,rep:5},t:'El nuevo mercado respondió muy bien.'},no:{e:{cust:.15,rep:-3},t:'El mercado resultó más difícil de lo esperado.'}},w:'Salir del país multiplica el mercado y el riesgo. Una marca fuerte e innovadora tiene más probabilidad de lograrlo.'},
+ {l:'Entrar con un distribuidor local: {$0.05}',e:{cash:-.05,cust:.12},flag:'export',later:[{y:1,e:{cust:.05},t:'Tu distribuidor en el exterior amplió su cobertura.'}],w:'Un socio local reduce la inversión y el riesgo, a cambio de un crecimiento menor.'},
+ {l:'Reforzar el mercado local: {$0.05}',e:{cash:-.05,g:.08,rep:3},w:'Ser fuerte en casa antes de salir es una estrategia válida.'},
+ {l:'Rechazar la propuesta',e:{},w:'Evitas el riesgo y también la oportunidad.'}]},
+{id:'adquisicion',a:'Inversiones',lv:4,c:'valor',s:'Tu competidor más pequeño está en venta por {$0.30}.',o:[
+ {l:'Comprarlo con deuda',e:{debt:.30,cust:.25,cap:.25,emp:2,fixed:.03,prod:-5},w:'Comprar un competidor da clientes de inmediato, pero integrar dos empresas es difícil y la deuda queda.'},
+ {l:'Comprarlo con caja propia',e:{cash:-.30,cust:.25,cap:.25,emp:2,fixed:.03,prod:-5},w:'Sin deuda nueva, pero con la caja comprometida.'},
+ {l:'Contratar solo a su mejor personal: {$0.06}',e:{cash:-.06,cust:.06,prod:3,emp:1},w:'Te llevas el talento sin cargar con toda la empresa.'},
+ {l:'No comprar',e:{},later:[{y:1,e:{cust:-.06},t:'Un rival grande compró a ese competidor y ahora te quita {c}.'}],w:'Lo que tú no compras, lo puede comprar otro.'}]},
+{id:'planta',a:'Producción',lv:4,c:'fijos',s:'Un centro de operaciones automatizado bajaría tus costos por unidad.',o:[
+ {l:'Construirlo con un préstamo de {$0.25}',e:{debt:.25,vc:-.15,cap:.40,upe:.3,inno:8},later:[{y:1,e:{vc:-.04},t:'El equipo ya domina el centro automatizado y los costos bajaron más.'}],w:'Una gran inversión baja el costo unitario para siempre, si hay volumen suficiente para aprovecharla.'},
+ {l:'Alquilarlo: {$0.05} al año',e:{fixed:.05,vc:-.07,cap:.30},w:'Alquilar evita la deuda, pero sube tus costos fijos.'},
+ {l:'Mejorar lo que ya tienes: {$0.06}',e:{cash:-.06,vc:-.03,cap:.10},w:'Mejoras graduales con riesgo bajo.'},
+ {l:'No invertir',e:{},w:'Tus costos quedan donde están.'}]},
+{id:'estructura',a:'Contratación y despidos',lv:4,c:'productividad',s:'La empresa creció y las decisiones se volvieron lentas.',o:[
+ {l:'Reestructurar y despedir al 20% del personal',e:{empP:-.2,fixed:-.03,prod:6,sat:-6,rep:-4},flag:'despidos',later:[{y:1,e:{prod:-5},t:'Tras los despidos, varios buenos empleados renunciaron.'}],w:'Reducir personal baja costos de inmediato, pero golpea la moral y la reputación como empleador.'},
+ {l:'Profesionalizar las gerencias: {$0.03} al año',e:{fixed:.03,prod:12},w:'Buenos gerentes cuestan más y hacen rendir a toda la organización.'},
+ {l:'Digitalizar los procesos: {$0.07}',e:{cash:-.07,prod:9,inno:8},w:'Menos trámites manuales, más velocidad.'},
+ {l:'Dejar todo como está',e:{prod:-4},w:'La burocracia crece sola si nadie la corta.'}]},
+{id:'fondo',a:'Finanzas',lv:4,c:'valor',s:'Un fondo de inversión ofrece {$0.40} a cambio de una parte de la empresa.',o:[
+ {l:'Aceptar la inversión',e:{cash:.40,g:.05,own:-.3},flag:'socio',later:[{y:1,e:{fixed:.03},t:'El fondo exigió crecer: subieron tus gastos de expansión.'}],w:'El capital fresco da fuerza para crecer, pero el inversionista exigirá resultados.'},
+ {l:'Negociar la mitad',e:{cash:.20,own:-.15},flag:'socio',w:'Menos dinero y menos presión.'},
+ {l:'Usar la oferta para conseguir mejor crédito',e:{rate:-.03},w:'Demostrar que hay interesados mejora tu posición frente al banco.'},
+ {l:'Rechazar',e:{},w:'Mantienes el control total.'}]},
+{id:'sostenible',a:'Innovación',lv:4,c:'reputacion',s:'Clientes y autoridades exigen prácticas más responsables con el medio ambiente.',o:[
+ {l:'Programa completo: {$0.05} y {$0.01} al año',e:{cash:-.05,fixed:.01,rep:12,inno:5},w:'Adelantarse a la exigencia convierte una obligación en ventaja de marca.'},
+ {l:'Cumplir el mínimo legal: {$0.01}',e:{cash:-.01,rep:2},w:'Evitas sanciones sin diferenciarte.'},
+ {l:'Ignorarlo',e:{},alt:{p:s=>.75-met(s).risk/200,ok:{t:'Por ahora nadie te fiscalizó.'},no:{e:{cash:-.05,rep:-10},t:'Llegó una multa y la noticia circuló en redes.'}},w:'Ahorrar en cumplimiento es una apuesta contra una multa y contra tu reputación.'}]},
+{id:'segundaMarca',a:'Nuevos productos',lv:4,c:'share',s:'Puedes crear una segunda marca para llegar a otro tipo de cliente.',o:[
+ {l:'Marca económica: {$0.08}',e:{cash:-.08,cust:.18,price:-.04,rep:-2},w:'Una marca barata gana volumen y participación, pero baja el precio promedio.'},
+ {l:'Marca premium: {$0.08}',e:{cash:-.08,price:.08,cust:.03,rep:5},w:'Una marca premium sube el margen con pocos clientes más.'},
+ {l:'Mantener una sola marca',e:{},w:'El foco también es una estrategia.'}]},
+{id:'dividendos',a:'Flujo de caja',lv:4,c:'liquidez',s:'Hay que decidir qué hacer con las utilidades acumuladas.',o:[
+ {l:'Reinvertir en crecimiento: {$0.06}',e:{cash:-.06,g:.08,inno:5},w:'Reinvertir sacrifica efectivo hoy por una empresa más grande mañana.'},
+ {l:'Pagar deuda',e:{pay:.20},w:'Cada boliviano de deuda pagado deja de generar intereses.'},
+ {l:'Repartir utilidades a los socios: {$0.08}',e:{cash:-.08,sat:0},w:'Repartir premia a los dueños, pero saca de la empresa el dinero que la protege.'},
+ {l:'Guardar la caja como reserva',e:{},w:'La liquidez es un seguro contra lo inesperado.'}]},
+/* --- Situaciones que aparecen según el estado de la empresa --- */
+{id:'faltaPersonal',a:'Contratación',lv:2,c:'capacidad',when:s=>s.emp*s.upe<s.cap*.92,s:'Tienes instalaciones para atender más, pero no la gente: tu equipo es el cuello de botella.',o:[
+ {l:'Ampliar el equipo 30%',e:{emp:3,prod:-2},later:[{y:1,e:{prod:4},t:'El personal nuevo ya rinde a pleno.'}],w:'Cada persona nueva tarda en rendir: al inicio baja la productividad del equipo y luego sube.'},
+ {l:'Pagar horas extra: {$0.012} al año',e:{fixed:.012,upe:.12,sat:-2},later:[{y:1,e:{prod:-4},t:'Un año de horas extra agotó a tu equipo.'}],w:'Las horas extra resuelven hoy y desgastan mañana.'},
+ {l:'Automatizar tareas repetitivas: {$0.06}',e:{cash:-.06,upe:.25,inno:6},w:'Automatizar permite que cada persona atienda más, sin subir la planilla.'},
+ {l:'Seguir con el equipo actual',e:{},w:'La capacidad que no puedes operar es dinero parado.'}]},
+{id:'sinCapacidad',a:'Producción',lv:2,c:'capacidad',when:s=>s.flags.sinCap,s:'El año pasado la demanda superó tu capacidad y dejaste {c} sin atender.',o:[
+ {l:'Ampliar y contratar: {$0.08}',e:{cash:-.08,cap:.30,emp:2},w:'Cuando la demanda ya existe, ampliar capacidad es la inversión más segura.'},
+ {l:'Subir precios para moderar la demanda',e:{price:.07,cust:-.03},w:'Si no puedes atender a todos, cobrar más a los que sí atiendes mejora el margen.'},
+ {l:'Tercerizar el excedente',e:{vc:.05,cap:.25},w:'Atiendes más sin invertir, con menor margen por venta.'},
+ {l:'Seguir igual',e:{sat:-5},w:'Seguirás perdiendo ventas y clientes molestos.'}]},
+{id:'cajaRoja',a:'Flujo de caja',lv:1,c:'liquidez',when:s=>s.cash<s.S*.03,s:'La caja está casi vacía y hay pagos que vencen pronto.',o:[
+ {l:'Préstamo de emergencia de {$0.15}',e:{debt:.15,cash:.15,rate:.03},w:'El crédito urgente siempre es el más caro.'},
+ {l:'Vender activos',e:{cash:.10,cap:-.15},w:'Consigues efectivo sacrificando capacidad futura.'},
+ {l:'Recortar gastos de inmediato',e:{fixed:-.04,prod:-4,sat:-4},w:'Alivia la caja, con costo en servicio y equipo.'},
+ {l:'Pedir un aporte a los socios',e:{cash:.12,own:-.1},flag:'socio',w:'Dinero sin intereses, a cambio de compartir la empresa.'}]},
+{id:'cajaOciosa',a:'Inversiones',lv:2,c:'liquidez',when:s=>s.cash>s.S*.45,s:'Tienes mucha caja acumulada sin usar.',o:[
+ {l:'Invertir en crecer: {$0.15}',e:{cash:-.15,cap:.20,g:.10},w:'El dinero quieto pierde valor; invertido puede multiplicarse.'},
+ {l:'Pagar toda la deuda posible',e:{pay:.40},w:'Sin deuda, la empresa resiste casi cualquier crisis.'},
+ {l:'Depósito a plazo fijo',e:{},later:[{y:1,e:{cash:.02},t:'Tu depósito a plazo fijo generó intereses.'}],w:'Rendimiento bajo y seguro.'},
+ {l:'Mantener la reserva',e:{},w:'Mucha liquidez da tranquilidad, pero no hace crecer la empresa.'}]},
+{id:'deudaAlta',a:'Endeudamiento',lv:3,c:'deuda',when:s=>s.debt>s.S*.35,s:'Las cuotas de la deuda se comen buena parte de lo que ganas.',o:[
+ {l:'Refinanciar con otro banco',e:{rate:-.03,cash:-.01},w:'Una tasa menor reduce los intereses de todos los años siguientes.'},
+ {l:'Vender activos para pagar',e:{cap:-.15,debt:-.20},w:'Bajas la deuda achicando la empresa.'},
+ {l:'Convertir deuda en participación de un socio',e:{debt:-.20,own:-.15},flag:'socio',w:'Cambias un acreedor por un socio.'},
+ {l:'Seguir pagando como hasta ahora',e:{},w:'La deuda baja sola, lentamente, si no ocurre nada malo.'}]},
+{id:'crisisServicio',a:'Clientes',lv:2,c:'clientes',when:s=>s.sat<40,s:'Tus {c} están molestos y se nota: cada mes vuelven menos.',o:[
+ {l:'Plan de recuperación del servicio: {$0.05}',e:{cash:-.05,sat:15,rep:5},w:'Recuperar la confianza cuesta más que no haberla perdido.'},
+ {l:'Disculpa pública y descuentos',e:{price:-.04,sat:8,rep:3},w:'Reconocer el error ayuda; el descuento lo pagas con margen.'},
+ {l:'Enfocarte en conseguir clientes nuevos',mk:1,e:{cash:-.04,g:.05},w:'Llenar un balde con huecos: entran clientes y se siguen yendo.'}]},
+{id:'rotacion',a:'Recursos humanos',lv:2,c:'productividad',when:s=>s.flags.despidos&&s.prod<55,s:'Después de los despidos el ambiente es tenso y hay renuncias.',o:[
+ {l:'Aumento general de sueldos: {$0.02} al año',e:{fixed:.02,prod:7,sat:3},w:'Subir sueldos frena las renuncias y eleva tus costos fijos.'},
+ {l:'Mejorar el clima laboral: {$0.015}',e:{cash:-.015,prod:5},w:'El trato y las condiciones importan tanto como el sueldo.'},
+ {l:'Reemplazar a quien se vaya',e:{prod:-4,cash:-.01},w:'Cada reemplazo tarda meses en rendir como el anterior.'}]}
+];
+
+/* ===== eventos inesperados ===== */
+const EV=[
+{id:'crisis',a:'Crisis económica',w:s=>s.year>=2?1.5:.6,s:'La economía del país se frena y la gente gasta menos.',c:'liquidez',
+ pre:s=>{const dr=s.debt/s.S,m=months(s);let hit=.06+dr*.12,t='Perdiste '+pct(hit)+' de tus {c}.';if(m>3){hit*=.5;t='Tu buena liquidez amortiguó el golpe: solo perdiste '+pct(hit)+' de tus {c}.'}else if(dr>.3)t+=' Tu deuda alta hizo que te afecte más.';return{e:{cust:-hit},t}},o:[
+ {l:'Promociones para sostener las ventas',e:{price:-.05,cust:.05},w:'En crisis el cliente busca precio.'},
+ {l:'Recortar costos y esperar',e:{fixed:-.04,prod:-3},w:'Proteger la caja es la prioridad cuando no sabes cuánto durará.'},
+ {l:'Invertir mientras los demás se achican: {$0.06}',mk:1,e:{cash:-.06,g:.08},w:'Quien invierte en la crisis sale adelante cuando termina, si la caja aguanta.'}]},
+{id:'proveedor',a:'Problemas con un proveedor',w:s=>1,s:'{Prov} suben sus precios de un día para otro.',c:'fijos',
+ pre:s=>s.flags.dosProv?{e:{vc:.04},t:'Como tienes más de un proveedor, tu costo solo subió 4%.'}:{e:{vc:.10},t:'Tu costo por unidad subió 10%.'},o:[
+ {l:'Cambiar de proveedor',e:{vc:-.05},alt:{p:s=>.45+s.prod/250,ok:{t:'El nuevo proveedor cumple.'},no:{e:{sat:-5},t:'La calidad bajó y los {c} lo notaron.'}},w:'Cambiar ahorra, pero un proveedor nuevo es una incógnita.'},
+ {l:'Trasladar el aumento al precio',e:{price:.05,cust:-.04},w:'Proteges el margen y arriesgas clientes.'},
+ {l:'Firmar un contrato de largo plazo: {$0.03}',e:{cash:-.03,vc:-.03},w:'Un contrato fija el precio y te quita flexibilidad.'}]},
+{id:'competidor',a:'Nuevo competidor',w:s=>s.year>=2?1.3:.5,s:'Una cadena grande entra a tu mercado con mucha publicidad.',c:'share',
+ pre:s=>s.rep>65?{e:{cust:-.04},t:'Tu buena reputación retuvo a la mayoría: perdiste solo 4% de tus {c}.'}:{e:{cust:-.09},t:'Perdiste 9% de tus {c}.'},o:[
+ {l:'Publicidad defensiva: {$0.05}',mk:1,e:{cash:-.05,cust:.05},w:'Recordarle al cliente por qué te elige.'},
+ {l:'Bajar precios 6%',e:{price:-.06,cust:.06},w:'Contra un grande, la guerra de precios suele ganarla el grande.'},
+ {l:'Especializarte en un nicho',e:{price:.05,cust:-.03,rep:5,inno:4},w:'Ser el mejor para pocos puede rendir más que ser uno más para todos.'}]},
+{id:'reputacion',a:'Crisis de reputación',w:s=>s.sat<50?2:.8,s:'Una mala experiencia de un cliente se vuelve viral.',c:'reputacion',
+ pre:s=>s.sat>65?{e:{rep:-6},t:'Tus {c} satisfechos salieron a defenderte: la reputación bajó poco.'}:{e:{rep:-13},t:'Tu reputación cayó con fuerza.'},o:[
+ {l:'Disculpa pública y compensación: {$0.03}',e:{cash:-.03,rep:8,sat:3},w:'Responder rápido y con hechos corta la crisis.'},
+ {l:'Campaña de imagen: {$0.05}',e:{cash:-.05,rep:5},w:'La publicidad sin corregir el problema convence a pocos.'},
+ {l:'Guardar silencio',e:{},later:[{y:1,e:{cust:-.05},t:'El silencio ante la crisis te costó {c}.'}],w:'En redes, el silencio se lee como culpa.'}]},
+{id:'falla',a:'Problemas de producción',w:s=>1,s:'Una falla grave detiene parte de la operación.',c:'capacidad',
+ pre:s=>s.flags.seguro?{e:{cap:-.04},t:'El seguro cubrió la mayor parte: tu capacidad bajó solo 4%.'}:{e:{cap:-.12},t:'Tu capacidad bajó 12%.'},o:[
+ {l:'Reparación urgente: {$0.04}',e:{cash:-.04,cap:.12},w:'Recuperas la capacidad pagando la urgencia.'},
+ {l:'Aprovechar para modernizar: {$0.09}',e:{cash:-.09,cap:.20,prod:5},w:'Una crisis puede ser el momento de renovar.'},
+ {l:'Operar con lo que queda',e:{},w:'Sin gasto, con menos capacidad.'}]},
+{id:'huelga',a:'Conflicto laboral',w:s=>s.flags.despidos?2.5:.7,s:'El personal paraliza actividades y exige mejores condiciones.',c:'productividad',
+ pre:s=>({e:{prod:-8},t:'La productividad cayó 8 puntos.'}),o:[
+ {l:'Negociar un aumento: {$0.02} al año',e:{fixed:.02,prod:8,sat:2},w:'La paz laboral tiene un costo fijo.'},
+ {l:'Bono único: {$0.025}',e:{cash:-.025,prod:5},w:'Resuelve el momento sin elevar los costos permanentes.'},
+ {l:'Mantenerte firme',e:{},alt:{p:s=>.2+s.sat/160,ok:{e:{prod:2},t:'El conflicto se disolvió.'},no:{e:{prod:-6,rep:-4},t:'El conflicto escaló y salió en la prensa.'}},w:'Puede salir bien o empeorar.'}]},
+{id:'impuestos',a:'Cambio en impuestos',w:s=>1,s:'Cambian las normas tributarias y suben tus obligaciones.',c:'utilidad',
+ pre:s=>s.flags.contador?{e:{fixed:.006},t:'Tu contador lo anticipó y el impacto fue menor.'}:{e:{fixed:.015},t:'Tus gastos fijos subieron.'},o:[
+ {l:'Contratar asesoría tributaria: {$0.01}',e:{cash:-.01,fixed:-.008},w:'Planificar impuestos dentro de la ley reduce lo que pagas.'},
+ {l:'Trasladarlo al precio',e:{price:.02,cust:-.015},w:'El cliente paga el impuesto si acepta el precio.'},
+ {l:'Absorberlo',e:{},w:'Tu utilidad lo paga.'}]},
+{id:'tecno',a:'Nueva tecnología',w:s=>1,s:'Aparece una tecnología que cambia cómo se trabaja en tu rubro.',c:'productividad',o:[
+ {l:'Adoptarla ya: {$0.05}',e:{cash:-.05,inno:12,prod:5},alt:{p:s=>.35+s.inno/120,ok:{e:{cust:.05},t:'Fuiste de los primeros y atrajiste {c}.'},no:{t:'La tecnología todavía no convence al cliente.'}},w:'Llegar primero da ventaja, y también el costo de los errores iniciales.'},
+ {l:'Hacer una prueba: {$0.02}',e:{cash:-.02,inno:5},w:'Aprendes sin apostar la empresa.'},
+ {l:'Esperar',e:{},later:[{y:1,e:{inno:-5,cust:-.03},t:'Los competidores que adoptaron la nueva tecnología te sacaron ventaja.'}],w:'Esperar es barato hasta que el mercado cambia.'}]},
+{id:'boom',good:1,a:'Aumento de demanda',w:s=>s.rep>60?2:.8,s:'Tu rubro se pone de moda y llegan muchos {c} nuevos.',c:'capacidad',
+ pre:s=>({e:{cust:.10},t:'Tus {c} aumentaron 10%.'}),o:[
+ {l:'Ampliar capacidad rápido: {$0.06}',e:{cash:-.06,cap:.25},w:'Sin capacidad, la demanda extra se la lleva otro.'},
+ {l:'Subir precios 6%',e:{price:.06,sat:-3},w:'Cuando sobra demanda, el precio puede subir sin perder clientes.'},
+ {l:'No cambiar nada',e:{},w:'Si tu capacidad no alcanza, perderás parte de esta ola.'}]},
+{id:'angel',good:1,a:'Oferta de inversión',w:s=>1,s:'Un inversionista quiere entrar a tu empresa.',c:'valor',o:[
+ {l:'Aceptar: {$0.15}',e:{cash:.15,own:-.15},flag:'socio',later:[{y:2,e:{cash:-.04},t:'Tu socio cobró su parte de las utilidades.'}],w:'Caja inmediata a cambio de compartir el futuro.'},
+ {l:'Pedirle un préstamo en vez de sociedad',e:{debt:.10,cash:.10},w:'Mantienes la propiedad y asumes la obligación de pagar.'},
+ {l:'Rechazar',e:{},w:'Sigues solo.'}]},
+{id:'remate',good:1,a:'Oportunidad de expansión',w:s=>1,s:'Un negocio vecino cierra y remata sus equipos y su local.',c:'capacidad',o:[
+ {l:'Comprar todo: {$0.08}',e:{cash:-.08,cap:.20,g:.04},w:'Comprar barato en el momento justo, si tienes caja.'},
+ {l:'Comprar solo los equipos: {$0.03}',e:{cash:-.03,cap:.08},w:'Una mejora pequeña y segura.'},
+ {l:'Dejar pasar',e:{},w:'No toda oportunidad es para ti.'}]},
+{id:'clienteClave',a:'Pérdida de un cliente importante',w:s=>1,s:'Tu cliente más grande anuncia que se va con la competencia.',c:'clientes',
+ pre:s=>s.sat>65?{e:{cust:-.03},t:'Como tus {c} están satisfechos, logró irse solo una parte: perdiste 3%.'}:{e:{cust:-.08},t:'Perdiste 8% de tus {c} de un día para otro.'},o:[
+ {l:'Hacerle una contraoferta con descuento',e:{price:-.03},alt:{p:s=>.3+s.rep/160,ok:{e:{cust:.06},t:'Aceptó quedarse.'},no:{t:'No aceptó: bajaste el precio sin recuperarlo.'}},w:'Retener con descuento funciona mejor cuando el cliente valora tu marca.'},
+ {l:'Salir a buscar clientes nuevos: {$0.04}',mk:1,e:{cash:-.04,g:.06},w:'Depender de pocos clientes es un riesgo; diversificar cuesta, pero protege.'},
+ {l:'Ajustar la empresa al nuevo tamaño',e:{fixed:-.03,prod:-2},w:'Achicar costos protege la utilidad, aunque renuncias a recuperar lo perdido.'}]},
+{id:'bloqueo',a:'Caída inesperada de ventas',w:s=>1,s:'Bloqueos y paros dificultan que tus {c} lleguen o reciban sus pedidos.',c:'ventas',
+ pre:s=>({e:{cust:-.05},t:'Perdiste 5% de tus {c} por semanas sin operar con normalidad.'}),o:[
+ {l:'Crear un canal alternativo de venta: {$0.02}',e:{cash:-.02,cust:.03,inno:3},w:'Tener más de un canal protege de cierres.'},
+ {l:'Promociones de reactivación',e:{price:-.03,cust:.04},w:'Recuperas clientes pagando con margen.'},
+ {l:'Esperar a que pase',e:{},w:'Sin gasto y sin recuperación.'}]}
+];
+
+/* ===== motor ===== */
+let s=null,ui={biz:'delivery',metric:'sales',setup:{}};
+function proj(s,noise=0){
+  // crecimiento de clientes: impulso comercial + reputación + satisfacción (retención) + innovación; se frena al saturar el mercado
+  const P=(BIZ[s.biz]||{}).p||{};
+  const gE=s.g>0?s.g/(1+1.5*s.g):s.g; // el impulso comercial tiene rendimientos decrecientes
+  let growth=.03+(P.g0||0)+gE+(s.rep-50)*.003*(P.repK||1)+(s.sat-50)*.003+Math.max(-.02,((s.inno||30)-30)*.001*(P.innoK||1))+noise
+    -((s.idle||0)>=2?.025:0)-(s.price0?Math.max(0,s.price/s.price0-1)*.4*(P.priceK||1):0); // cobrar más caro que al inicio frena la llegada de clientes nuevos
+  if(growth>0&&s.M)growth*=Math.max(0,1-s.cust/s.M*(P.sat||1.6));
+  // capacidad efectiva: instalaciones y personal (el menor de los dos), ajustada por productividad
+  const staff=s.upe?s.emp*s.upe:Infinity,capE=Math.min(s.cap,staff)*(.75+s.prod/200);
+  const cust=Math.max(0,s.cust*(1+growth)),demand=cust*s.freq,units=Math.min(demand,capE);
+  const sales=units*s.price,varc=units*s.vc*(1-(s.prod-50)/400-Math.max(0,(s.inno||0)-30)/230*(P.innoK||1)), // productividad e innovación bajan el costo de operar
+     // un equipo más productivo desperdicia menos
+    rd=sales*(s.inno||0)/100*.07,fix=s.fixedO+s.emp*s.sal+rd,lev=s.debt/Math.max(sales,1),int=s.debt*(s.rate+Math.max(0,lev-.3)*.3); // a más apalancamiento, más caro el crédito // rd: sostener la innovación cuesta cada año
+  const ebt=sales-varc-fix-int,tax=ebt>0?ebt*.25:0;
+  return {rd,cust,demand,capE,units,staffShort:staff<s.cap*.98,lost:demand-units,sales,varc,fix,int,tax,profit:ebt-tax,be:s.price>s.vc?(fix+int)/(s.price-s.vc):Infinity};
+}
+function months(s){const p=proj(s);return s.cash/Math.max(1,(p.varc+p.fix)/12)}
+function met(s){
+  const p=proj(s),share=p.cust/s.M,dr=s.debt/Math.max(p.sales,1),m=s.cash/Math.max(1,(p.varc+p.fix)/12);
+  const risk=clamp(Math.min(60,dr*75)+(m<1?25:m<2?15:m<3?8:0)+(p.profit<0?15:0)+(s.rep<35?8:0)+(s.cash<0?10:0)+(s.inno>55&&m<3?8:0));
+  const idleCash=(s.idle||0)>=2?Math.max(0,s.cash-(p.varc+p.fix)/2)*.6:0; // la caja ociosa por años vale menos para un comprador
+  const value=Math.max(0,p.profit*3.5+p.sales*.65+s.cash-idleCash-s.debt)*(1+(s.rep-50)/200+s.inno/120)*(1-Math.min(.2,Math.max(0,(s.stag||0)-1)*.07))*(s.own||1);
+  const margin=p.sales?p.profit/p.sales:0;
+  const sc={Finanzas:clamp(50+margin*200+clamp(m,0,(s.idle||0)>=2?3:6)*3-dr*45+(s.start?clamp((value/Math.max(s.start.value,1)-1)*6,-10,15):0)),Ventas:clamp(40+(p.sales/s.S0-1)*30+share*100),
+    'Gestión':clamp(s.prod*.7+(p.units/Math.max(p.capE,1))*30),'Innovación':clamp(s.inno),Riesgo:100-risk,'Satisfacción':(s.sat+s.rep)/2};
+  const index=Object.values(sc).reduce((a,b)=>a+b,0)/6;
+  return {...p,share,dr,months:m,risk,value,margin,sc,index};
+}
+function snap(s){const m=met(s);return {cash:s.cash,debt:s.debt,cust:s.cust,price:s.price,vc:s.vc,fix:m.fix,cap:s.cap,emp:s.emp,rep:s.rep,sat:s.sat,prod:s.prod,inno:s.inno,sales:m.sales,profit:m.profit,risk:m.risk,value:m.value,share:m.share,index:m.index,custP:m.cust}}
+function apply(s,e){if(!e)return;const S=s.S,P=BIZ[s.biz].p;for(const k in e){let v=e[k];if(v>0&&k==='cap')v*=P.capK||1;if(v>0&&k==='vc')v*=P.vcK||1;
+  if(k==='cash')s.cash+=v*S;else if(k==='fixed')s.fixedO=Math.max(0,s.fixedO+v*S);else if(k==='debt')s.debt=Math.max(0,s.debt+v*S);
+  else if(k==='pay'){const pay=Math.max(0,Math.min(s.debt,v*S,s.cash));s.cash-=pay;s.debt-=pay}
+  else if(k==='cust'||k==='price'||k==='vc'||k==='cap'||k==='upe')s[k]=Math.max(0,s[k]*(1+v));
+  else if(k==='emp')s.emp=Math.max(1,s.emp*(1+v*.1));else if(k==='empP')s.emp=Math.max(1,s.emp*(1+v)); // emp: cada unidad es 10% del equipo actual
+  else if(k==='rep'||k==='sat'||k==='prod'||k==='inno')s[k]=clamp(s[k]+v);
+  else if(k==='g')s.g+=v;else if(k==='own')s.own*=1+v;else if(k==='rate')s.rate=clamp(s.rate+v,.06,.35)}}
+const T=t=>{const b=BIZ[s.biz];return t.replace(/\{\$([\d.]+)\}/g,(_,x)=>money(+x*s.S)).replace(/\{(\w+)\}/g,(m,k)=>{const lo=k.toLowerCase();if(!(lo in b))return m;const v=b[lo];return k[0]!==lo[0]?v[0].toUpperCase()+v.slice(1):v})};
+
+function newGame(){
+  const b=BIZ[ui.biz],u=ui.setup;
+  s={biz:ui.biz,name:u.name||b.def,year:1,cash:u.cash??b.cash,debt:0,rate:.12,cust:u.cust??b.cust,freq:b.freq,price:u.price??b.price,vc:b.vc,fixedO:b.fixedO,emp:b.emp,sal:b.sal,cap:b.cap,
+    director:u.dir||'Tú',upe:b.cap/b.emp*(b.p.upe||1.3),fin:1,own:1,style:{G:0,I:0,R:0,C:0},ach:{},rep:50,sat:55,prod:50,inno:b.inno,g:0,M:b.M,flags:{},later:[],hist:[],log:[],used:{},queue:[],qi:0,phase:'intro',last:null,fired:[],prev:null,over:0};
+  s.price0=s.price;s.S0=s.S=proj(s).sales;const m=met(s);
+  s.start=snap(s);s.hist.push({y:0,sales:m.sales,profit:m.profit,cust:s.cust,debt:0,value:m.value,share:m.share,cash:s.cash,index:m.index});
+  buildYear();render();
+}
+function buildYear(){
+  const L=Math.min(s.year,4),free=d=>!s.used[d.id];
+  let q=s.year>1?shuffle(D.filter(d=>d.when&&free(d)&&d.when(s))).slice(0,2):[];
+  const pool=shuffle(D.filter(d=>!d.when&&free(d)&&d.lv===L)).concat(shuffle(D.filter(d=>!d.when&&free(d)&&d.lv<L)));
+  q=q.concat(pool).slice(0,4);
+  const rk=met(s).risk,mg0=met(s).margin,W=e=>e.w(s)*(e.id==='competidor'?(mg0>.18?2.2:1)*(1+(s.stag||0)*.6):1)*((e.id==='remate'||e.id==='boom')&&(s.stag||0)>=2?.5:1)*(BIZ[s.biz].p.ev[e.id]||1)*(e.good?Math.max(.4,1.5-rk/60):.6+rk/50); // más riesgo: más probables los eventos negativos
+  const evs=EV.filter(free);let tot=evs.reduce((a,e)=>a+W(e),0),r=rnd()*tot,ev=evs[0];
+  for(const e of evs){r-=W(e);if(r<=0){ev=e;break}}
+  q.splice(2,0,{...ev,ev:true});q.forEach(d=>s.used[d.id]=1);
+  s.queue=q;s.qi=0;s.pre=null;
+}
+function openDecision(){const d=s.queue[s.qi];s.pre=null;s.prev=snap(s);
+  if(d.pre){const r=d.pre(s),a=snap(s);apply(s,r.e);s.pre={t:T(r.t),rows:diff(a,snap(s)),idx:a.index}}
+  s.phase='dec'}
+function eff(o){ // efecto real de una opción según el estado actual de la empresa
+  const e={...(o.e||{})},notes=[];
+  const P=BIZ[s.biz].p;let later=null;
+  if(e.inno>=5){const h=Math.round(e.inno/2),le={inno:h};e.inno-=h; // la innovación madura: la mitad llega el año siguiente
+    if(e.prod>0){le.prod=e.prod;delete e.prod} // y la mejora de productividad también tarda
+    if(e.cash<0)e.cash*=1+s.inno/200; // cada salto de innovación cuesta más que el anterior
+    later={y:1,e:le,t:'Tu inversión en innovación del año pasado terminó de dar resultados.'}}
+  if(o.mk){const k=(.5+s.rep/100)*(P.mkK||1);if(e.g>0)e.g*=k;if(e.cust>0)e.cust*=k;
+    if(s.rep<40)notes.push('Tu reputación es baja: la publicidad convenció a menos gente de la esperada.');else if(s.rep>=65)notes.push('Tu buena reputación multiplicó el efecto de la publicidad.')}
+  if(e.price>0&&e.cust<0){e.cust*=(1.5-s.sat/100)*2*(P.priceK||1);
+    if(s.sat>=70)notes.push('Tus clientes están satisfechos: pocos se fueron por el aumento de precio.');else if(s.sat<40)notes.push('Con clientes insatisfechos, el aumento de precio espantó a más de los esperados.')}
+  return {e,notes,later}}
+// riesgo de ejecución de los proyectos de innovación: sube cuanto más innovas, con poca caja y con baja productividad
+const execRisk=()=>clamp(.20+s.inno/220+(months(s)<2?.18:0)-(s.prod-50)/200,.05,.6);
+const isInno=o=>o.e&&o.e.inno>=5&&(o.e.cash<0||o.e.debt>0);
+const prob=o=>clamp(o.alt.p(s),.05,.95);
+function styleOf(o){const e=o.e||{};if((e.inno||0)>=5)return'I';if(e.debt>0||(e.g||0)>=.05||(e.cap||0)>=.2||(e.cust||0)>=.08)return'G';if(e.vc<0||e.fixed<0||e.price>0||e.pay)return'R';return'C'}
+function choose(k){
+  const d=s.queue[s.qi],o=d.o[k],before=snap(s);s.prev=before;
+  const label=T(o.l),x=eff(o),notes=x.notes;
+  if(isInno(o)){const pf=execRisk();if(rnd()<pf){x.e.cash=(x.e.cash||0)-(o.e.cash<0?-o.e.cash*.5:.025);x.e.inno=0;notes.push('La ejecución se complicó: el proyecto costó más de lo previsto y sus resultados tardarán un año más (riesgo de ejecución: '+pct(pf)+').')}}
+  apply(s,x.e);if(x.later)s.later.push({at:s.year+1,e:x.later.e,t:x.later.t,from:label});
+  if(o.alt){const pr=prob(o),r=rnd()<pr?o.alt.ok:o.alt.no;apply(s,r.e);if(r.t)notes.push(T(r.t)+' (probabilidad de éxito: '+pct(pr)+')')}
+  if(o.f){const r=o.f(s);if(r){apply(s,r.e);if(r.t)notes.push(T(r.t))}}
+  if(o.flag)s.flags[o.flag]=1;
+  (o.later||[]).forEach(x=>s.later.push({at:s.year+x.y,e:x.e,t:x.t,from:label}));
+  s.style[styleOf(o)]++;
+  const after=snap(s),di=after.index-(s.pre?s.pre.idx:before.index),rows=diff(before,after);
+  s.last={d,label,notes,rows,why:T(o.w),future:(o.later||[]).map(x=>x.y).concat(x.later?[1]:[]),di,k};
+  s.log.push({y:s.year,a:d.a,l:label,di,ev:d.ev,rows,id:d.id,k});s.phase='res';checkAch(false);render();
+}
+const ROWS=[['cash','💰 Dinero disponible','m',1],['debt','💳 Deuda','m',-1],['cust','👥 Clientes','n',1],['price','🏷️ Precio','p',0],['vc','📦 Costo por unidad','p',-1],['fix','🧾 Gastos fijos al año','m',-1],
+ ['cap','🏭 Capacidad','pc',1],['emp','🧑‍💼 Empleados','pc',0],['rep','⭐ Reputación','pt',1],['sat','😊 Satisfacción','pt',1],['prod','⚙️ Productividad','pt',1],['inno','💡 Innovación','pt',1],
+ ['sales','📈 Ventas proyectadas','m',1],['profit','💵 Utilidad proyectada','m',1],['share','📊 Participación','sh',1],['risk','⚠️ Riesgo','pt',-1],['value','🏢 Valor de la empresa','m',1]];
+function diff(a,b){const out=[];for(const [k,l,t,dir] of ROWS){const d=b[k]-a[k];if(Math.abs(d)<1e-6)continue;let txt;
+  if(t==='m'){if(Math.abs(d/rate())<.5)continue;txt=smoney(d)}
+  else if(t==='n'){if(Math.abs(d)<.5)continue;txt=(d>0?'+':'−')+nf(Math.abs(d))+' ('+(d>0?'+':'−')+pct(Math.abs(d/a[k]),1)+')'}
+  else if(t==='p'||t==='pc'){const r=d/a[k];if(Math.abs(r)<.0005)continue;txt=(r>0?'+':'−')+pct(Math.abs(r),1)}
+  else if(t==='i')txt=(d>0?'+':'−')+nf(Math.abs(d));
+  else if(t==='sh'){if(Math.abs(d)<.0005)continue;txt=(d>0?'+':'−')+nf(Math.abs(d)*100,1)+' pts'}
+  else{if(Math.abs(d)<.5)continue;txt=(d>0?'+':'−')+nf(Math.abs(d))+' pts'}
+  out.push({l,txt,cls:dir===0?'neu':(d*dir>0?'up':'down')})}return out}
+
+function closeYear(){
+  const st0=stageOf(),before=met(s),prevH=s.hist[s.hist.length-1],p=proj(s,(rnd()-.5)*(BIZ[s.biz].p.noise||.06)),why=[];
+  const c0=s.cust;s.cust=p.cust;let strain=false;
+  if(p.cust>c0*1.15){strain=true;s.sat=clamp(s.sat-4);s.prod=clamp(s.prod-3)}
+  why.push(`Tus ${BIZ[s.biz].c} pasaron de ${nf(c0)} a ${nf(p.cust)} y vendiste ${nf(p.units)} ${BIZ[s.biz].u}.`);
+  if(p.lost>p.demand*.03){why.push(`La demanda superó tu capacidad: dejaste de vender ${nf(p.lost)} ${BIZ[s.biz].u} (${money(p.lost*s.price)}) y parte de esos ${BIZ[s.biz].c} no volverá.`);s.cust-=p.lost/s.freq*.5;s.sat=clamp(s.sat-5);s.rep=clamp(s.rep-2);s.flags.sinCap=1}else delete s.flags.sinCap;
+  if(p.staffShort&&p.lost>p.demand*.03)why.push('Tenías instalaciones de sobra pero poco personal: tu equipo no alcanzó a atender todo.');
+  if(strain)why.push('Creciste más de 15% en un año: la operación se desordenó y bajaron la satisfacción y la productividad.');
+  if(s.year>1)why.push('Sueldos y gastos generales subieron con el costo de vida.');
+  why.push(p.profit>=0?`De cada ${sym()}100 vendidos te quedaron ${sym()}${nf(p.profit/p.sales*100,1)} de utilidad, después de pagar ${money(p.tax)} de IUE.`:`Tus costos (${money(p.varc+p.fix+p.int)}) superaron tus ventas (${money(p.sales)}): el año cerró con pérdida.`);
+  if(s.cash>p.sales*.1){const it=s.cash*.03;s.cash+=it;why.push(`Tu caja en el banco te dio ${money(it)} de intereses.`)}
+  s.cash+=p.profit;const am=s.debt*.2,mo0=s.cash/Math.max(1,(p.varc+p.fix)/12);
+  if(!(p.profit>0&&s.debt<=p.sales*.3&&mo0>=1.5))s.fin=0;
+  if(p.rd>p.sales*.012)why.push(`Mantener tu nivel de innovación costó ${money(p.rd)} este año.`);
+  if(s.debt>0){why.push(`Pagaste ${money(p.int)} de intereses y ${money(am)} de capital de tu deuda.`);s.cash-=am;s.debt-=am;if(s.debt<1)s.debt=0}
+  let bankrupt=false;
+  if(s.cash<0){const need=-s.cash;
+    if(s.debt+need>p.sales*.85||s.over>=3){bankrupt=true;why.push(`Te faltaron ${money(need)} y ningún banco quiso prestarte más.`)}
+    else{s.debt+=need*1.1;s.cash=0;s.fin=0;s.overY=s.year;s.rep=clamp(s.rep-4);s.rate=clamp(s.rate+.02,.06,.35);s.over++;why.push(`La caja no alcanzó: cubriste ${money(need)} con un crédito de emergencia caro. Los bancos ahora te cobran más interés.`)}}
+  // innovación sostenida: mejora la productividad año a año y, si es alta, la reputación y la satisfacción
+  if(s.inno>30){s.prod=clamp(s.prod+(s.inno-30)/12);if(s.inno>=50){s.rep=clamp(s.rep+1.5);s.sat=clamp(s.sat+1);why.push('Tu nivel de innovación hizo más eficiente la operación y mejoró tu imagen.')}}
+  // costo de no crecer y de la caja ociosa
+  if(p.sales<prevH.sales*1.03){s.stag=(s.stag||0)+1;if(s.stag>=2){s.rep=clamp(s.rep-2);why.push(`Llevas ${s.stag} años casi sin crecer: el mercado avanza, pierdes relevancia frente a tus competidores y tu empresa vale menos.`)}}else s.stag=Math.max(0,(s.stag||0)-1);
+  if(mo0>6){s.idle=(s.idle||0)+1;if(s.idle>=2)why.push('Tienes caja para más de seis meses sin usar desde hace años: te protege, pero no hace crecer la empresa ni su valor.')}else s.idle=0;
+  s.M*=1.03;s.sal*=1.025;s.fixedO*=1.02; // sueldos y gastos suben cada año: quien no crece ve achicarse su margen
+  s.g*=.6;s.rep=clamp(s.rep+(s.sat-s.rep)*.15);s.inno=clamp(s.inno-2);s.cust=Math.min(s.cust,s.M*.6);s.S=Math.max(p.sales,s.S0*.4);
+  const m=met(s),h={y:s.year,sales:p.sales,profit:p.profit,cust:s.cust,debt:s.debt,value:m.value,share:s.cust/s.M,cash:s.cash,index:m.index};
+  s.hist.push(h);s.bankrupt=bankrupt;s.phase='year';s.prev=null;const stageUp=!bankrupt&&stageOf()>st0;s.report={h,prevH,why,bankrupt,stageUp};checkAch(true);if(stageUp)toast('<b>📈 ¡Tu empresa está creciendo!</b>'+STAGES[stageOf()],'ach');
+  s.log.push({y:s.year,yr:true,l:`Cierre del año ${s.year}: utilidad ${money(p.profit)}`,di:h.index-prevH.index});
+}
+function nextYear(){
+  if(s.bankrupt||s.year>=5){s.phase='end';render();return}
+  s.year++;const due=s.later.filter(x=>x.at<=s.year);s.later=s.later.filter(x=>x.at>s.year);
+  const a=snap(s);s.fired=due.map(x=>{apply(s,x.e);return T(x.t)});s.firedRows=diff(a,snap(s));
+  buildYear();s.phase='intro';render();
+}
+function ending(){
+  const h=s.hist[s.hist.length-1],m=met(s),r=h.sales/s.S0,mg=h.sales?h.profit/h.sales:0,dr=s.debt/Math.max(h.sales,1);
+  if(s.bankrupt)return['📉','Quiebra','Las decisiones tomadas llevaron a una situación financiera insostenible: la caja se agotó y nadie quiso prestar más.','Caja negativa y deuda mayor al 90% de las ventas.'];
+  if(m.risk>=55||(h.profit<0&&m.months<2))return['⚠️','Empresa en riesgo','La empresa sigue operando, pero enfrenta problemas de liquidez y endeudamiento. Un mal año más podría ser el último.',`Nivel de riesgo ${nf(m.risk)}/100.`];
+  if(r>=2&&dr>=.3)return['🏗️','Empresa grande con mucha deuda','Creciste rápido usando dinero prestado. El tamaño impresiona, pero buena parte de lo que ganas se va al banco.',`Ventas ${nf(r,1)} veces las iniciales y deuda de ${pct(dr)} de las ventas.`];
+  if(h.share>=.25)return['🏆','Empresa líder del mercado','Lograste convertir la empresa en líder: ninguna otra empresa tiene tantos clientes del mercado como la tuya.',`Participación de mercado de ${pct(h.share)}.`];
+  if(s.flags.export&&r>=1.7)return['🚀','Empresa en expansión internacional','La empresa cruzó la frontera y vende en nuevos mercados.',`Operación fuera del país y ventas ${nf(r,1)} veces las iniciales.`];
+  if(s.inno>=65)return['💡','Empresa innovadora','Tu empresa es referente por hacer las cosas de otra manera. Otros la miran para copiarla.',`Innovación ${nf(s.inno)}/100.`];
+  if(mg>=.15&&r<2.2)return['💰','Empresa pequeña pero muy rentable','Mantuviste un crecimiento moderado y conseguiste una rentabilidad excelente.',`Margen de utilidad de ${pct(mg,1)} sobre ventas.`];
+  if(r>=1.5)return['📈','Empresa en crecimiento','La empresa creció de forma sostenida y está lista para dar un salto mayor.',`Ventas ${nf(r,1)} veces las iniciales.`];
+  return['🏪','Empresa estable','La empresa sobrevivió cinco años sin grandes sobresaltos ni grandes saltos. Sigue siendo parecida a como empezó.','Sin crecimiento ni riesgo destacables.'];
+}
+
+/* ===== interfaz ===== */
+function render(){
+  $('cur-bs').setAttribute('aria-pressed',CUR==='Bs');$('cur-usd').setAttribute('aria-pressed',CUR==='USD');
+  if(!s){$('title').textContent='Simulador de Negocios';$('eyebrow').textContent='Juego de gestión empresarial · 5 años · 25 decisiones';$('app').innerHTML=iconize(startHTML());return}
+  $('title').textContent=s.name;$('eyebrow').textContent='Simulador de Negocios · '+BIZ[s.biz].name;
+  $('app').innerHTML=iconize(barHTML()+`<div class="grid"><div class="stage" id="stage">${stageHTML()}</div><aside class="dash">${dashHTML()}</aside></div>`);
+  chart();
+}
+function startHTML(){
+  const b=BIZ[ui.biz],u=ui.setup;
+  return `<div class="stage">
+  <p class="sub">Vas a dirigir una empresa durante cinco años. Cada decisión cambia el dinero, los clientes, la deuda y la reputación, y esos cambios traen nuevas situaciones. No hay respuestas correctas: lo que conviene depende de cómo esté tu empresa.</p>
+  <div class="how"><div><b>🧭 Decides</b>Cinco situaciones por año, una de ellas inesperada.</div><div><b>📊 Ves la consecuencia</b>Qué cambió y por qué.</div><div><b>📅 Cierras el año</b>Ventas, utilidad, deuda y valor.</div><div><b>🎖️ Subes de nivel</b>Emprendedor, Gerente, Director, CEO.</div></div>
+  ${ui.tried?`<div class="panel"><div class="head"><h2>🎯 Prueba otra estrategia</h2><span class="note">la vez pasada: ${STYLES[ui.tried][0].toLowerCase()}</span></div><div class="alts">${Object.entries(STYLES).filter(([k])=>k!==ui.tried).map(([k,v])=>`<div><b>${v[2]} ${v[0]}</b><span>${v[1]}.</span></div>`).join('')}</div></div>`:''}
+  <div><div class="eyebrow" style="margin-bottom:8px">Elige tu empresa</div><div class="types">${Object.entries(BIZ).map(([k,x])=>{const p=proj({...x,fixedO:x.fixedO,rep:50,sat:55,prod:50,g:0,debt:0,rate:.12});
+    return `<button class="type" data-act="biz" data-k="${k}" aria-pressed="${k===ui.biz}"><b>${x.name}</b><span>${x.desc}</span><dl><dt>Ventas al año</dt><dd>${money(p.sales)}</dd><dt>Utilidad al año</dt><dd>${money(p.profit)}</dd><dt>Caja inicial</dt><dd>${money(x.cash)}</dd><dt>${x.c[0].toUpperCase()+x.c.slice(1)}</dt><dd>${nf(x.cust)}</dd></dl><span class="pc"><b>📈 Fortaleza</b>${x.pro}</span><span class="pc"><b>⚠️ Debilidad</b>${x.con}</span></button>`}).join('')}</div></div>
+  <div class="panel"><div class="head"><h2>Ajusta el punto de partida</h2><span class="note">valores de ejemplo, puedes cambiarlos</span></div>
+   <div class="setup">
+    <label for="su-name">🏢 Nombre de la empresa<input id="su-name" data-su="name" type="text" maxlength="28" value="${u.name||b.def}"></label>
+    <label for="su-dir">👤 Tu nombre (director)<input id="su-dir" data-su="dir" type="text" maxlength="28" placeholder="Tu nombre" value="${u.dir||''}"></label>
+    <label for="su-cash">Capital inicial (${CUR})<input id="su-cash" data-su="cash" data-m="1" type="number" min="0" step="any" value="${+((u.cash??b.cash)/rate()).toFixed(2)}"></label>
+    <label for="su-price">Ingreso por ${b.u.replace(/s$/,'')} (${CUR})<input id="su-price" data-su="price" data-m="1" type="number" min="0" step="any" value="${+((u.price??b.price)/rate()).toFixed(2)}"></label>
+    <label for="su-cust">${b.c[0].toUpperCase()+b.c.slice(1)} iniciales<input id="su-cust" data-su="cust" type="number" min="1" step="1" value="${u.cust??b.cust}"></label>
+   </div></div>
+  <button class="btn" data-act="start">Empezar a dirigir la empresa</button></div>`;
+}
+/* ===== logros, estilo y escena ===== */
+const ACH=[
+ {id:'millon',g:'Fácil',ic:'🏆',n:'Primer millón',d:'Vender más de Bs 1.000.000 en un año',t:(s,m,h)=>h&&h.sales>=1e6},
+ {id:'finanzas',g:'Medio',ic:'💰',n:'Maestro de las finanzas',d:'Cinco años seguidos con utilidad, caja para 6 semanas o más, deuda moderada y sin créditos de emergencia',t:(s,m,h)=>h&&h.y>=5&&s.fin&&m.sc.Finanzas>=88},
+ {id:'crecer',g:'Medio',ic:'📈',n:'Rey del crecimiento',d:'Crecer 35% o más en ventas en un solo año',t:(s,m,h,ph)=>h&&ph&&h.sales>=ph.sales*1.35},
+ {id:'innovar',g:'Difícil',ic:'💡',n:'Empresa innovadora',d:'Llegar a 65 de innovación',t:s=>s.inno>=65},
+ {id:'mundo',g:'Medio',ic:'🌎',n:'Conquistador internacional',d:'Llevar la empresa a otro país',t:s=>!!s.flags.export},
+ {id:'sobrevivir',g:'Medio',ic:'🛡️',n:'Superviviente',d:'Volver a tener utilidad después de un crédito de emergencia',t:(s,m,h)=>h&&s.over>0&&h.profit>0&&h.y>s.overY},
+ {id:'sinDeuda',g:'Muy difícil',ic:'💳',n:'Libre de deudas',d:'Pagar toda la deuda después de haberte endeudado',t:(s,m,h)=>h&&s.hadDebt&&s.debt<1},
+ {id:'fieles',g:'Difícil',ic:'😊',n:'Clientes fieles',d:'Llegar a 70 de satisfacción',t:s=>s.sat>=70},
+ {id:'lider',g:'Medio',ic:'👑',n:'Número uno',d:'Alcanzar 25% de participación de mercado',t:(s,m)=>m.share>=.25}];
+function toast(html,cls=''){const box=$('toasts');if(!box)return;const el=document.createElement('div');el.className='toast '+cls;el.innerHTML=iconize(html);box.appendChild(el);setTimeout(()=>el.remove(),4200)}
+function checkAch(closed){if(s.debt>1)s.hadDebt=1;const m=met(s),h=closed?s.hist[s.hist.length-1]:null,ph=closed?s.hist[s.hist.length-2]:null;
+  for(const a of ACH)if(!s.ach[a.id]&&a.t(s,m,h,ph)){s.ach[a.id]=s.year;toast(`<b>${a.ic} ${ACC.profile&&ACC.profile.ach[a.id]?'Logro repetido':'Logro desbloqueado'}</b>${a.n}`,'ach')}}
+const STYLES={G:['Crecimiento','Más tamaño y participación, con más deuda y riesgo','📈','🚀 Director de crecimiento','crecimiento'],C:['Conservadora','Estabilidad y liquidez, con menos expansión','🛡️','🛡️ Director prudente','conservador'],
+ I:['Innovadora','Ventaja competitiva y valor futuro, con alto costo y riesgo de ejecución','💡','💡 Director innovador','innovador'],R:['Rentable','Margen y caja, sacrificando crecimiento','💰','💰 Director financiero','rentable']};
+// El estilo combina lo que decidiste (60%) con lo que realmente construiste (40%): crecimiento y deuda, innovación, margen y precio, liquidez sin deuda.
+function styleMix(){const d=s.style,n=Object.values(d).reduce((a,b)=>a+b,0);if(!n)return null;
+  const m=met(s),h=s.hist[s.hist.length-1],sales=s.phase==='end'||s.phase==='year'?h.sales:m.sales,c1=x=>clamp(x,0,1);
+  const o={G:c1((sales/s.S0-1)/1.5)+c1(m.dr/.6)*.5,I:c1(s.inno/70),R:c1(m.margin/.2)+c1((s.price/s.price0-1)/.3)*.3,C:c1(m.months/8)*(m.dr<.1?1:.3)+(m.dr<.05?.3:0)};
+  const on=Object.values(o).reduce((a,b)=>a+b,0)||1,mix={};let t=0;
+  for(const k in d){mix[k]=.6*d[k]/n+.4*o[k]/on;t+=mix[k]}for(const k in mix)mix[k]/=t;return mix}
+function styleNow(){const m=styleMix();return m?Object.entries(m).sort((a,b)=>b[1]-a[1])[0][0]:null}
+// si ningún estilo destaca (menos de 34% o a menos de 6 puntos del segundo), el título es equilibrado
+function styleTitle(){const e=Object.entries(styleMix()).sort((a,b)=>b[1]-a[1]);return e[0][1]<.34||e[0][1]-e[1][1]<.06?'🧭 Director equilibrado':STYLES[e[0][0]][3]}
+function styleText(){const m=styleMix();if(!m)return'';const e=Object.entries(m).sort((a,b)=>b[1]-a[1]);
+  if(e[0][1]<.34||e[0][1]-e[1][1]<.06)return `Repartiste tus decisiones entre varios estilos: ${STYLES[e[0][0]][4]} (${pct(e[0][1])}) y ${STYLES[e[1][0]][4]} (${pct(e[1][1])}) fueron los más marcados.`;
+  return e[1][1]>=.25?`Tu estilo fue principalmente ${STYLES[e[0][0]][4]}, pero con una fuerte orientación ${e[1][0]==='G'?'al crecimiento':e[1][0]==='I'?'a la innovación':e[1][0]==='R'?'a la rentabilidad':'a la prudencia'}.`:`Tu estilo fue claramente ${STYLES[e[0][0]][4]}: ${STYLES[e[0][0]][1].toLowerCase()}.`}
+const styleBars=()=>{const m=styleMix()||{G:0,C:0,I:0,R:0},top=styleNow();return `<div class="sty">${Object.entries(STYLES).map(([k,v])=>`<div class="${k===top?'on':''}" title="${v[1]}"><span>${v[2]} ${v[0]} ${m[k]?pct(m[k]):''}</span><s><i class="s${k}" style="width:${m[k]*100}%"></i></s></div>`).join('')}</div>`};
+const STAGES=['Empresa pequeña','Empresa en crecimiento','Gran empresa'];
+const stageName=()=>STAGES[stageOf()]+(s.flags.export?' con presencia internacional':'');
+const stageOf=()=>{const r=(s.phase==='year'||s.phase==='end'?s.hist[s.hist.length-1].sales:met(s).sales)/s.S0;return r>=2.4?2:r>=1.4?1:0};
+const BIZIC={delivery:'🛵',ecommerce:'📦',comida:'🍽️'};
+function scene(){
+  const m=met(s),st=stageOf(),intl=!!s.flags.export,crisis=s.bankrupt||m.risk>=55||s.cash<0,W=360,H=170,G=120,up=!crisis&&m.profit>0;
+  const B=[[{x:150,w:58,h:44}],[{x:118,w:68,h:74},{x:192,w:48,h:46}],[{x:84,w:62,h:104},{x:152,w:58,h:80},{x:216,w:46,h:56}]][st].slice();
+  if(s.flags.sucursal||s.flags.franquicia)B.push({x:274,w:40,h:38,two:1});
+  let g=`<rect width="${W}" height="${H}" fill="var(${crisis?'--sky-bad':'--sky'})"/>`;
+  // cielo: sol o tormenta
+  if(crisis){g+=`<g fill="var(--cloud)"><ellipse cx="46" cy="30" rx="24" ry="12"/><ellipse cx="66" cy="24" rx="18" ry="12"/><ellipse cx="30" cy="26" rx="14" ry="9"/></g><path d="M50 40l-7 13h7l-4 12 12-16h-7l4-9z" fill="var(--win)"/>`;
+    for(let i=0;i<6;i++)g+=`<line x1="${26+i*9}" y1="46" x2="${22+i*9}" y2="56" stroke="var(--cloud)" stroke-width="1.5"/>`}
+  else{g+=`<circle cx="38" cy="30" r="11" fill="var(--sun)"/>`;for(let i=0;i<8;i++){const a=i*Math.PI/4;g+=`<line x1="${38+Math.cos(a)*15}" y1="${30+Math.sin(a)*15}" x2="${38+Math.cos(a)*20}" y2="${30+Math.sin(a)*20}" stroke="var(--sun)" stroke-width="2" stroke-linecap="round"/>`}
+    g+=`<g fill="var(--cloud-l)"><ellipse cx="250" cy="22" rx="20" ry="7"/><ellipse cx="264" cy="18" rx="13" ry="7"/></g>`}
+  // presencia internacional: globo, ruta y avión
+  if(intl){g+=`<g fill="none" stroke="var(--blue)" stroke-width="1.6"><circle cx="328" cy="30" r="15" fill="var(--surface)"/><path d="M313 30h30M328 15c6 6 6 24 0 30M328 15c-6 6-6 24 0 30"/><path d="M${B[0].x+B[0].w/2} ${G-B[0].h-16}Q230 -6 312 26" stroke-dasharray="3 4"/></g><path d="M236 16l10-3-3 9-2-4z" fill="var(--blue)"/>`}
+  g+=`<rect y="${G}" width="${W}" height="${H-G}" fill="var(${crisis?'--ground-bad':'--ground'})"/><rect y="${H-22}" width="${W}" height="22" fill="var(--road)"/>`;
+  for(let x=8;x<W;x+=26)g+=`<rect x="${x}" y="${H-12}" width="12" height="2" fill="var(--road-l)"/>`;
+  // edificios
+  B.forEach((b,i)=>{g+=`<rect x="${b.x}" y="${G-b.h}" width="${b.w}" height="${b.h}" rx="3" fill="var(${b.two?'--bld2':'--bld'})"/>`;
+    for(let yy=G-b.h+8;yy<G-14;yy+=14)for(let xx=b.x+7;xx<b.x+b.w-9;xx+=13)g+=`<rect x="${xx}" y="${yy}" width="7" height="8" rx="1" fill="var(${crisis&&(xx+yy)%3?'--win-off':'--win'})"/>`;
+    g+=`<rect x="${b.x+b.w/2-5}" y="${G-12}" width="10" height="12" fill="var(--door)"/>`;
+    if(i===0)g+=`<rect x="${b.x+8}" y="${G-b.h-14}" width="${b.w-16}" height="13" rx="3" fill="var(--sign)"/><text x="${b.x+b.w/2}" y="${G-b.h-4}" font-size="9" text-anchor="middle" style="fill:var(--on-sign);font-family:var(--body);font-weight:600">${(s.name||'').split(/\s+/).map(w=>w[0]||'').join('').slice(0,3).toUpperCase()}</text>`});
+  // tablero de tendencia
+  g+=`<g transform="translate(${B[0].x-34},${G-34})"><rect width="26" height="20" rx="3" fill="var(--surface)" stroke="var(--line)"/><polyline points="${up?'4,15 10,11 15,13 22,5':'4,5 10,9 15,7 22,15'}" fill="none" stroke="var(${up?'--good':'--bad'})" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="12" y="20" width="2" height="14" fill="var(--door)"/></g>`;
+  // equipo
+  const n=Math.min(16,Math.round(s.emp));for(let i=0;i<n;i++){const x=12+i*8+(i%2)*2,y=G+16+(i%3)*4;g+=`<circle cx="${x}" cy="${y-9}" r="3" fill="var(--person)"/><rect x="${x-3}" y="${y-6}" width="6" height="9" rx="2" fill="var(--person)"/>`}
+  // actividad propia de cada negocio, crece con la empresa
+  const k=(st+1)*(crisis?1:2);
+  if(s.biz==='comida'){for(let i=0;i<Math.min(k,5);i++){const x=206+i*30;if(x>W-20)break;g+=`<path d="M${x-11} ${G+10}h22l-11-9z" fill="var(--bad)"/><rect x="${x-1}" y="${G+10}" width="2" height="12" fill="var(--door)"/><rect x="${x-8}" y="${G+18}" width="16" height="3" rx="1" fill="var(--surface)"/>`}}
+  else if(s.biz==='ecommerce'){for(let i=0;i<Math.min(k,6);i++){const x=206+i*22;g+=`<rect x="${x}" y="${G+10}" width="14" height="12" rx="1.500" fill="var(--box)"/><path d="M${x} ${G+15}h14M${x+7} ${G+10}v12" stroke="var(--door)" stroke-width="1" fill="none"/>`;if(i%2)g+=`<rect x="${x+2}" y="${G}" width="10" height="10" rx="1.500" fill="var(--box)"/>`}}
+  const vans=s.biz==='comida'?0:Math.min(s.biz==='delivery'?k:st+1,6);
+  for(let i=0;i<vans;i++){const x=W-34-i*48;g+=`<rect x="${x}" y="${H-24}" width="20" height="11" rx="2" fill="var(--sign)"/><path d="M${x+20} ${H-20}h6l3 4v3h-9z" fill="var(--bld)"/><circle cx="${x+6}" cy="${H-12}" r="3" fill="var(--door)"/><circle cx="${x+22}" cy="${H-12}" r="3" fill="var(--door)"/>`}
+  return `<svg class="scene" viewBox="0 0 ${W} ${H}" role="img" aria-label="${STAGES[st]}${intl?', con presencia internacional':''}${crisis?', en crisis':''}">${g}</svg>`;
+}
+/* ===== cartas de decisión ===== */
+const AREAIC={'Precios':'🏷️','Marketing':'📣','Flujo de caja':'💧','Contratación':'🧑‍💼','Compras':'🛒','Finanzas':'💰','Ventas':'📈','Endeudamiento':'🏦','Inventarios':'📦','Capacitación':'🎓','Clientes':'👥','Competencia':'⚔️','Reducción de costos':'✂️','Apertura de sucursales':'🏬','Nuevos productos':'🧪','Tecnología':'💻','Gestión de riesgos':'🛡️','Recursos humanos':'🤝','Publicidad':'📺','Expansión':'🌎','Inversiones':'🏗️','Producción':'🏭','Contratación y despidos':'🧑‍💼','Innovación':'💡'};
+const EVIC={crisis:'📉',proveedor:'🚚',competidor:'⚔️',reputacion:'📱',falla:'🔧',huelga:'✊',impuestos:'🧾',tecno:'🤖',boom:'🚀',angel:'🤝',remate:'🏷️',bloqueo:'🚧',clienteClave:'💔'};
+function optIcon(o){const e=o.e||{};return e.own<0?'🤝':e.debt>0?'🏦':e.pay||e.debt<0?'💳':e.inno>=5?'💡':e.empP<0?'✂️':e.emp>0?'🧑‍💼':e.cap>=.2?'🏭':o.mk?'📣':e.price>0?'📈':e.price<0?'🏷️':e.vc<0?'📦':e.fixed<0?'✂️':e.cust>0||e.g>0?'👥':e.sat>0||e.rep>0?'⭐':e.prod>0?'⚙️':e.cash>0?'💵':e.cash<0?'💰':o.alt?'🎲':'⏸️'}
+function optChips(o){const e=eff(o).e,c=[],a=(k,up,l)=>{const v=e[k];if(v)c.push(((v>0)===up?'↑ ':'↓ ')+l)};
+  a('cash',true,'Caja');if(e.debt>0)c.push('↑ Deuda');if(e.debt<0||e.pay)c.push('↓ Deuda');a('cust',true,'Clientes');a('g',true,'Crecimiento');a('price',true,'Precio');a('vc',true,'Costo por unidad');a('fixed',true,'Gastos fijos');
+  if(e.cap||e.upe)c.push(((e.cap||e.upe)>0?'↑ ':'↓ ')+'Capacidad');if(e.emp||e.empP)c.push(((e.emp||e.empP)>0?'↑ ':'↓ ')+'Personal');a('rep',true,'Reputación');a('sat',true,'Satisfacción');a('prod',true,'Productividad');a('inno',true,'Innovación');
+  if(e.own<0)c.push('↓ Tu parte de la empresa');a('rate',true,'Tasa de interés');return c}
+
+function barHTML(){
+  const L=LEVELS[s.year],closed=s.phase==='year'||s.phase==='end',done=closed?5:s.qi+(s.phase==='res'?1:0),cur=s.phase==='intro'?0:Math.min(5,s.qi+1);
+  return `<div class="hud"><div class="hud-l"><span class="hud-k">Nivel ${Math.min(s.year,4)} · ${L.n}</span><b>AÑO ${s.year} / 5</b></div>
+  <div class="years">${[1,2,3,4,5].map(y=>`<div class="yr ${y===s.year?'on':''} ${y<s.year?'past':''}"><i><u style="width:${y<s.year?100:y===s.year?(s.phase==='intro'?0:done/5*100):0}%"></u></i>Año ${y}</div>`).join('')}</div>
+  <div class="hud-r"><span class="hud-k">${closed?'Año cerrado':s.phase==='intro'?'Por empezar':'Decisión'}</span><b>${closed?'5 / 5':cur+' / 5'}</b></div>
+  <button class="btn ghost" data-act="quit">${ACC.canSave?'Salir al inicio':'Reiniciar'}</button></div>`;
+}
+const rowsHTML=r=>r.length?`<ul class="deltas">${r.map((x,i)=>`<li style="animation-delay:${i*60}ms"><span>${x.l}</span><b class="${x.cls}">${x.txt}</b></li>`).join('')}</ul>`:'<p class="note">Ningún indicador cambió.</p>';
+function stageHTML(){
+  if(s.phase==='intro')return introHTML();if(s.phase==='dec')return decHTML();if(s.phase==='res')return resHTML();if(s.phase==='year')return yearHTML();return endHTML();
+}
+function situation(){const m=met(s);
+  if(s.cash<0)return['⛈️','La caja está en rojo. Si cierras el año así tendrás que cubrirla con crédito caro.','bad'];
+  if(m.dr>.4)return['🏦','La deuda pesa: buena parte de lo que ganes este año irá al banco.','warn'];
+  if(m.profit<0)return['📉','Con los números actuales, este año cerraría con pérdida. Necesitas vender más o gastar menos.','bad'];
+  if(m.demand>m.capE*1.02)return['🏭',m.staffShort?'Hay más demanda de la que tu equipo puede atender. Te falta personal.':'La demanda supera tu capacidad. Si no la amplías, perderás ventas y clientes.','warn'];
+  if(m.months>6)return['💰','Tienes caja de sobra. La pregunta de este año es en qué usarla.','good'];
+  if(s.sat<45)return['😟','Tus clientes no están contentos. Antes de crecer conviene arreglar el servicio.','warn'];
+  return['📈','La empresa está en marcha. Este año se trata de crecer sin descuidar la caja.','good']}
+function introHTML(){const L=LEVELS[s.year],b=BIZ[s.biz],[ic,tx,cl]=situation();
+  if(s.year===1)return `<div class="card"><div class="banner b-blue"><span class="big">🏢</span><div><span class="hud-k">Bienvenido a tu empresa</span><h3>${s.name}</h3></div></div>
+  <div class="idgrid"><div><span>👤 Director</span><b>${s.director}</b></div><div><span>💰 Capital</span><b>${money(s.cash)}</b></div><div><span>👥 ${b.c[0].toUpperCase()+b.c.slice(1)}</span><b>${nf(s.cust)}</b></div>
+   <div><span>📍 Mercado</span><b>${b.name}</b></div><div><span>🎯 Clientes posibles</span><b>${nf(s.M)}</b></div><div><span>📅 Período</span><b>Año 1 de 5</b></div></div>
+  <p class="sub">Empiezas como <b>${L.n}</b>. ${L.d} Lo que decidas este año seguirá pesando en los siguientes.</p>
+  <div class="impact i-${cl}"><b>${ic} Situación actual.</b> ${tx}</div>
+  <button class="btn" data-act="go">Tomar la primera decisión</button></div>`;
+  return `<div class="card"><div class="banner b-blue"><span class="big">📅</span><div><span class="hud-k">Nivel ${Math.min(s.year,4)} · ${L.n}</span><h3>Empieza el año ${s.year}</h3></div></div>
+  <p class="sub">${L.d}</p>
+  ${s.fired.length?`<div class="why"><b>⏳ Consecuencias de decisiones anteriores</b><ul class="bul">${s.fired.map(t=>`<li>${t}</li>`).join('')}</ul>${rowsHTML(s.firedRows)}</div>`:''}
+  <div class="impact i-${cl}"><b>${ic} Situación actual.</b> ${tx}</div>
+  <button class="btn" data-act="go">Ver la primera decisión</button></div>`}
+function decHTML(){const d=s.queue[s.qi],g=GL[d.c],good=d.good;
+  return `<div class="card ${d.ev?(good?'ev-good':'event'):''}">
+  <div class="banner ${d.ev?(good?'b-green':'b-red'):'b-blue'}"><span class="big">${d.ev?EVIC[d.id]||'⚡':AREAIC[d.a]||'🧭'}</span><div><span class="hud-k">${d.ev?(good?'✨ Oportunidad inesperada':'⚠️ Evento inesperado'):'Decisión '+(s.qi+1)+' de 5 · '+d.a}</span><h3>${d.ev?d.a:T(d.s)}</h3></div></div>
+  ${d.ev?`<p class="sit">${T(d.s)}</p>`:''}
+  ${s.pre?`<div class="impact i-${good?'good':'bad'}"><b>Impacto inmediato.</b> ${s.pre.t}${rowsHTML(s.pre.rows)}</div>`:''}
+  <div class="eyebrow">¿Qué decides?</div>
+  <div class="cards">${d.o.map((o,k)=>{const cost=o.e&&o.e.cash<0?-o.e.cash*s.S:0,ch=optChips(o);return `<button class="opt" data-act="pick" data-k="${k}">
+    <span class="opt-h"><span class="opt-ic">${optIcon(o)}</span><span class="opt-l">${'ABCD'[k]}</span></span>
+    <span class="opt-t">${T(o.l)}</span>
+    <span class="chips">${ch.length?ch.map(c=>`<i class="${c[0]==='↑'?'cu':'cd'}">${c}</i>`).join(''):'<i>Sin cambios inmediatos</i>'}${o.alt?`<i class="cr">🎲 Incierto · éxito ${pct(prob(o))}</i>`:''}${isInno(o)?`<i class="cr">🎲 Riesgo de ejecución ${pct(execRisk())}</i>`:''}${(o.later&&o.later.length)||(o.e&&o.e.inno>=5)?'<i class="cf">⏳ Efecto futuro</i>':''}</span>
+    ${cost>Math.max(s.cash,0)?'<small>No tienes caja suficiente: quedarías en rojo.</small>':''}</button>`}).join('')}</div>
+  <p class="note">Las flechas muestran qué áreas se mueven, no cuánto. Ninguna opción es correcta por sí sola: depende de tu caja, tu deuda y tus clientes. ${g?`<button class="link" data-act="gl" data-k="${d.c}">¿Qué es ${g[0].toLowerCase()}?</button>`:''}</p></div>`}
+function resHTML(){const L=s.last,cls=Math.abs(L.di)<.3?'neu':L.di>0?'up':'down',fy=[...new Set(L.future)].map(y=>s.year+y).filter(y=>y<=5);
+  return `<div class="card plain"><div class="banner ${cls==='up'?'b-green':cls==='down'?'b-red':'b-blue'}"><span class="big">${cls==='up'?'📈':cls==='down'?'📉':'➖'}</span><div><span class="hud-k">Decisión tomada · ${L.d.a}</span><h3>${L.label}</h3></div></div>
+  <div class="verdict ${cls}">${cls==='neu'?'La empresa sigue prácticamente igual':cls==='up'?'La empresa mejoró':'La empresa empeoró'} · índice ${L.di>=0?'+':'−'}${nf(Math.abs(L.di),1)}</div>
+  ${L.notes.map(n=>`<div class="impact i-warn">${n}</div>`).join('')}
+  <div><div class="eyebrow" style="margin-bottom:6px">Impacto</div>${rowsHTML(L.rows)}</div>
+  ${L.future.length?`<div class="impact i-purple"><b>⏳ Impacto futuro.</b> ${fy.length?'Esta decisión volverá a sentirse en el año '+fy.join(' y ')+'.':'Sus efectos de largo plazo llegarían después del año 5.'}</div>`:''}
+  <div class="why"><b>¿Qué significa?</b><span>${L.why}</span>${GL[L.d.c]?`<button class="link" style="align-self:flex-start" data-act="gl" data-k="${L.d.c}">Aprender más: ${GL[L.d.c][0]}</button>`:''}</div>
+  <button class="btn" data-act="next">${s.qi<4?'Siguiente situación':'Cerrar el año '+s.year}</button></div>`}
+function chg(a,b,bad){if(Math.abs(b)<1){return Math.abs(a)<1?'<em class="neu">sin cambio</em>':`<em class="${bad?'down':'up'}">nuevo</em>`}const r=(a-b)/Math.abs(b);if(Math.abs(r)<.005)return'<em class="neu">sin cambio</em>';return `<em class="${(r>0)!==!!bad?'up':'down'}">${r>0?'↑':'↓'} ${pct(Math.abs(r))}</em>`}
+function yearHTML(){const {h,prevH,why,bankrupt,stageUp}=s.report,better=h.index>=prevH.index;
+  return `<div class="card plain"><div class="banner ${bankrupt?'b-red':better?'b-green':'b-yellow'}"><span class="big">${bankrupt?'💥':better?'🎉':'📋'}</span><div><span class="hud-k">Fin del año ${s.year}</span><h3>${bankrupt?'La empresa no puede seguir operando':better?'La empresa mejoró respecto al año anterior':'La empresa empeoró respecto al año anterior'}</h3></div></div>
+  ${stageUp?`<div class="grow">📈 ¡Tu empresa está creciendo! Ahora es: ${STAGES[stageOf()].toLowerCase()}</div>`:''}
+  <div class="rep"><div><span>📈 Ventas</span><b>${money(h.sales)}</b>${chg(h.sales,prevH.sales)}</div><div><span>💵 Utilidad</span><b class="${h.profit<0?'down':''}">${money(h.profit)}</b>${chg(h.profit,prevH.profit)}</div>
+  <div><span>👥 Clientes</span><b>${nf(h.cust)}</b>${chg(h.cust,prevH.cust)}</div><div><span>💳 Deuda</span><b>${money(h.debt)}</b>${chg(h.debt,prevH.debt,1)}</div><div><span>🏢 Valor</span><b>${money(h.value)}</b>${chg(h.value,prevH.value)}</div></div>
+  <div class="why"><b>¿Qué pasó este año?</b><ul class="bul">${why.map(w=>`<li>${w}</li>`).join('')}</ul></div>
+  <p class="note">Índice empresarial: ${nf(prevH.index)} → ${nf(h.index)} de 100.</p>
+  <button class="btn" data-act="year">${bankrupt||s.year>=5?'Ver el resultado final':'Pasar al año '+(s.year+1)}</button></div>`}
+function story(){return s.log.filter(x=>!x.yr).sort((a,b)=>Math.abs(b.di)-Math.abs(a.di)).slice(0,4).sort((a,b)=>a.y-b.y).map(x=>{
+  const top=[...x.rows].filter(r=>r.cls!=='neu').slice(0,3).map(r=>r.l.replace(/^\S+\s/,'')+' '+r.txt).join(', ');
+  return `<li><i class="${x.di>=0?'up':'down'}"></i><div><span>Año ${x.y} · ${x.ev?'Evento: ':''}${x.a}</span><b>${x.l}</b>${top?`<span>${x.di>=0?'Ayudó':'Costó'}: ${top}.</span>`:''}</div></li>`}).join('')}
+function endHTML(){const [ic,t,d,crit]=ending(),m=met(s),a=s.start,h=s.hist[s.hist.length-1],st=styleNow(),got=ACH.filter(x=>s.ach[x.id]);
+  const row=(l,x,y)=>`<div><span>${l}</span><b>${x} → ${y}</b></div>`;
+  return `<div class="card final"><div class="banner ${s.bankrupt?'b-red':'b-gold'}"><span class="big">${ic}</span><div><span class="hud-k">${s.bankrupt?'Partida terminada en el año '+s.year:'🏆 ¡5 años completados!'} · ${s.name}</span><h3>${t}</h3></div></div>
+  ${scene()}
+  <p class="sub">${d}</p>
+  <div class="rep"><div><span>⭐ Índice</span><b>${nf(m.index)}/100</b></div><div><span>🏢 Valor</span><b>${money(h.value)}</b></div><div><span>👥 Clientes</span><b>${nf(h.cust)}</b></div><div><span>📊 Participación</span><b>${pct(h.share,1)}</b></div><div><span>💳 Deuda</span><b>${money(s.debt)}</b></div></div>
+  <div class="impact i-blue"><b>Por qué terminaste así.</b> ${crit}</div>
+  ${st?`<div class="stylebox"><span class="hud-k">Tu estilo de dirección</span><h3>${styleTitle()}</h3><p>${styleText()}</p>${styleBars()}</div>`:''}
+  <div><div class="eyebrow" style="margin-bottom:6px">Punto de partida → resultado final</div><div class="end">
+  ${row('💰 Capital',money(a.cash),money(s.cash))}${row('👥 Clientes',nf(a.cust),nf(h.cust))}${row('📈 Ventas al año',money(a.sales),money(h.sales))}${row('💵 Utilidad al año',money(a.profit),money(h.profit))}
+  ${row('💳 Deuda',money(0),money(s.debt))}${row('🏢 Valor',money(a.value),money(h.value))}${row('⭐ Reputación',nf(a.rep),nf(s.rep))}${row('💡 Innovación',nf(a.inno),nf(s.inno))}</div></div>
+  <div><div class="eyebrow" style="margin-bottom:8px">La historia de tu empresa: las decisiones que más pesaron</div><ul class="tl story">${story()}</ul></div>
+  ${got.length?`<div><div class="eyebrow" style="margin-bottom:6px">Logros de esta partida</div><div class="achs">${got.map(x=>`<span class="ach on">${x.ic} ${x.n}<small>${x.g}</small></span>`).join('')}</div></div>`:''}
+  <div class="why"><b>¿Qué habría pasado con otra estrategia?</b><span>Con las mismas condiciones de partida, otro estilo de dirección lleva a otra empresa y a otra historia.</span></div>
+  <div class="btns"><button class="btn" data-act="again">🔄 Jugar de nuevo</button><button class="btn alt" data-act="other">🎯 Probar otra estrategia</button></div></div>`}
+
+const KP=[['cash','💰','Dinero','liquidez','fin','m'],['sales','📈','Ventas del año','ventas','fin','m'],['profit','💵','Utilidad del año','utilidad','fin','m'],
+ ['custP','👥','Clientes','clientes','mkt','n'],['share','📊','Participación','share','mkt','s'],['value','🏢','Valor de empresa','valor','fin','m'],
+ ['debt','💳','Deuda','deuda','rsk','m'],['rep','⭐','Reputación','reputacion','mkt','p'],['sat','😊','Satisfacción','clientes','mkt','p'],
+ ['inno','💡','Innovación','productividad','inn','p'],['prod','⚙️','Productividad','productividad','inn','p'],['risk','⚠️','Riesgo','riesgo','rsk','p']];
+function dashHTML(){
+  const m=met(s),now=snap(s),p=s.prev,closed=s.phase==='year'||s.phase==='end',st=stageOf(),sty=styleNow();
+  if(closed){const h=s.hist[s.hist.length-1];Object.assign(now,{sales:h.sales,profit:h.profit,custP:h.cust,share:h.share,value:h.value})}
+  const val=(k,t)=>t==='s'?pct(now.share,1):t==='n'?nf(now[k]):t==='p'?nf(now[k])+'/100':money(now[k]);
+  const dl=(k,t)=>{if(!p)return'';const d=now[k]-p[k],bad=k==='debt'||k==='risk';if(Math.abs(d)<(t==='s'?.0005:.5))return'';
+    const tx=t==='s'?nf(Math.abs(d)*100,1)+' pts':t==='n'?nf(Math.abs(d)):t==='p'?nf(Math.abs(d))+' pts':Math.abs(p[k])>1?pct(Math.abs(d/p[k]),Math.abs(d/p[k])<.1?1:0):short(Math.abs(d));return `<span class="${(d>0)!==bad?'up':'down'}">${d>0?'+':'−'}${tx}</span>`};
+  const tasks=[['Cerrar un año con utilidad',s.hist.slice(1).some(h=>h.profit>0)],['Llegar a 20% de participación de mercado',m.share>=.2],['Reputación de 75 o más',s.rep>=75],['Duplicar el valor de la empresa',m.value>=s.start.value*2&&m.value>0],['Riesgo por debajo de 20 con deuda pagada',m.risk<20&&s.debt<1&&s.year>=3]];
+  const be=m.be,mx=Math.max(m.units,be===Infinity?m.units:be)*1.15||1,tot=Object.values(s.style).reduce((a,b)=>a+b,0)||1;
+  return `<div class="panel co"><div class="co-h"><div><span class="eyebrow">Tu empresa</span><h2>${stageName()}</h2></div><span class="pill">${nf(s.emp)} empleados${s.own<.999?' · tu parte '+pct(s.own):''}</span></div>${scene()}
+   ${styleBars()}
+   <p class="note">${sty?'Tu estilo hasta ahora: '+STYLES[sty][0].toLowerCase()+'. '+STYLES[sty][1]+'.':'Tu estilo de dirección se irá definiendo con tus decisiones.'}</p></div>
+  <div class="panel"><div class="score"><div class="ring" style="--v:${m.index}"><div><span><b>${nf(m.index)}</b><span>índice empresarial</span></span></div></div>
+   <div class="bars">${Object.entries(m.sc).map(([k,v])=>`<div><span>${k}</span><s><i class="${v<40?'low':v<60?'mid':''}" style="width:${v}%"></i></s><em>${nf(v)}</em></div>`).join('')}</div></div></div>
+  <div class="kpis">${KP.map(([k,ic,l,g,cat,t])=>{const d=dl(k,t),al=(k==='cash'&&now.cash<0)||(k==='risk'&&now.risk>=55)||(k==='profit'&&now.profit<0);return `<div class="kpi k-${cat} ${al?'alert':''} ${d?'chg':''}"><span class="n"><span><i class="ki">${ic}</i>${l}</span><button class="q" data-act="gl" data-k="${g}" aria-label="Qué es ${l}">?</button></span><span class="v">${val(k,t)}</span><span class="d">${d}</span></div>`}).join('')}</div>
+  <p class="note">${closed?'Cifras al cierre del año.':'Ventas, utilidad y clientes son la proyección de este año con tus decisiones hasta ahora.'}</p>
+  <div class="panel"><div class="head"><h2>Evolución</h2><div class="tabs" id="tabs">${[['sales','Ventas'],['profit','Utilidad'],['cust','Clientes'],['debt','Deuda'],['value','Valor'],['share','Participación']].map(([k,l])=>`<button data-act="metric" data-k="${k}" aria-pressed="${ui.metric===k}">${l}</button>`).join('')}</div></div><div class="chart" id="chart"></div></div>
+  <div class="panel"><div class="head" style="margin-bottom:0"><h2>Punto de equilibrio</h2><button class="q" data-act="gl" data-k="equilibrio" aria-label="Qué es el punto de equilibrio">?</button></div>
+   <div class="meter"><i class="${m.units<be?'short':''}" style="width:${m.units/mx*100}%"></i>${be!==Infinity?`<u style="left:${be/mx*100}%"></u><em style="left:${clamp(be/mx*100,18,82)}%">equilibrio: ${nf(be)}</em>`:''}</div>
+   <p class="note">Este año venderías ${nf(m.units)} ${BIZ[s.biz].u}${be===Infinity?'; cada venta deja pérdida.':m.units>=be?', '+pct(m.units/be-1)+' por encima de lo que necesitas para no perder.':', '+pct(1-m.units/be)+' menos de lo que necesitas para no perder.'} Capacidad: ${nf(m.capE)}${m.staffShort?' (limitada por falta de personal)':''}.</p></div>
+  <div class="panel"><div class="head"><h2>Logros</h2><span class="note">${ACH.filter(a=>s.ach[a.id]).length} de ${ACH.length}</span></div><div class="achs">${ACH.map(a=>`<span class="ach ${s.ach[a.id]?'on':''}" title="${a.g}: ${a.d}">${a.ic} ${a.n}<small>${a.g}</small></span>`).join('')}</div></div>
+  <div class="panel"><div class="head"><h2>Metas</h2><span class="note">${tasks.filter(t=>t[1]).length} de ${tasks.length}</span></div><ul class="tasks">${tasks.map(t=>`<li class="${t[1]?'done':''}"><i>${t[1]?'✓':''}</i>${t[0]}</li>`).join('')}</ul></div>
+  <div class="panel"><div class="head"><h2>Historia de la empresa</h2></div>${s.log.length?`<ul class="tl">${[...s.log].reverse().map(x=>`<li><i class="${x.yr?'yr':Math.abs(x.di)<.3?'':x.di>0?'up':'down'}"></i><div>${x.yr?`<b>${x.l}</b>`:`<span>Año ${x.y} · ${x.ev?'Evento: ':''}${x.a}</span>${x.l}`}</div></li>`).join('')}</ul>`:'<p class="note">Aquí quedará registrada cada decisión y su efecto.</p>'}</div>`;
+}
+function chart(){
+  const el=$('chart');if(!el)return;const k=ui.metric,closed=s.phase==='year'||s.phase==='end',now=snap(s);
+  const pts=s.hist.map(h=>({l:h.y?'Año '+h.y:'Inicio',v:h[k]}));if(!closed)pts.push({l:'Año '+s.year,v:k==='cust'?met(s).cust:now[k],p:1});
+  const f=v=>k==='share'?pct(v,1):k==='cust'?nf(v):money(v),fs=v=>k==='share'?pct(v):k==='cust'?short(v*rate()):short(v);
+  const W=520,H=210,L=56,R=8,Tp=12,B=26;let lo=Math.min(0,...pts.map(p=>p.v)),hi=Math.max(0,...pts.map(p=>p.v));if(hi===lo)hi=lo+1;
+  const y=v=>Tp+(H-Tp-B)*(1-(v-lo)/(hi-lo)),bw=(W-L-R)/pts.length;
+  let g='';[lo,(lo+hi)/2,hi].forEach(t=>g+=`<line x1="${L}" x2="${W-R}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line)" stroke-dasharray="2 4"/><text x="${L-6}" y="${y(t)+4}" text-anchor="end">${fs(t)}</text>`);
+  g+=`<line x1="${L}" x2="${W-R}" y1="${y(0)}" y2="${y(0)}" stroke="var(--mute)"/>`;
+  pts.forEach((p,i)=>{const x=L+bw*i+bw*.2,w=bw*.6,y0=y(0),y1=y(p.v),top=Math.min(y0,y1),h=Math.max(2,Math.abs(y1-y0));
+    g+=`<rect x="${x}" y="${top}" width="${w}" height="${h}" rx="3" fill="${p.v<0||k==='debt'?'var(--bad)':k==='cust'||k==='share'?'var(--blue)':p.p?'var(--proj)':'var(--accent)'}" opacity="${p.p&&(k==='debt'||k==='cust'||k==='share')?.5:1}"/><text x="${x+w/2}" y="${H-8}" text-anchor="middle">${p.p?'proy.':p.l.replace('Año ','A')}</text><rect data-i="${i}" x="${L+bw*i}" y="${Tp}" width="${bw}" height="${H-Tp-B}" fill="transparent"/>`});
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Evolución por año">${g}</svg><div class="tip" hidden></div>`;
+  const svg=el.firstChild,tip=el.lastChild;
+  svg.onmousemove=svg.onclick=e=>{const i=e.target.dataset&&e.target.dataset.i;if(i===undefined)return;const p=pts[+i],sc=svg.clientWidth/W;
+    tip.hidden=false;tip.style.left=clamp((L+bw*i+bw/2)*sc,70,svg.clientWidth-70)+'px';tip.style.top=Math.min(y(p.v),y(0))*sc+'px';tip.textContent=p.l+(p.p?' (proyección)':'')+': '+f(p.v)};
+  svg.onmouseleave=()=>tip.hidden=true;
+}
+function glossary(k){const g=GL[k];if(!g)return;
+  $('modal').innerHTML=`<div class="overlay" data-act="close"><div class="modal" role="dialog" aria-modal="true" aria-label="${g[0]}"><span class="eyebrow">Concepto</span><h3>${g[0]}</h3><p>${g[1]}</p><button class="btn" data-act="close">Entendido</button></div></div>`;
+  $('modal').querySelector('.btn').focus()}
+
+/* ===== eventos de interfaz ===== */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-act]');if(!t)return;const a=t.dataset.act,k=t.dataset.k;
+  if(a==='close'){if(e.target.closest('.modal')&&!e.target.closest('.btn'))return;$('modal').innerHTML='';return}
+  if(a==='gl'){e.stopPropagation();glossary(k);return}
+  if(a==='biz'){ui.biz=k;ui.setup={};render()}
+  else if(a==='start')newGame();
+  else if(a==='quit'){s=null;render()}
+  else if(a==='again'){newGame()}
+  else if(a==='other'){ui.tried=styleNow();s=null;render()}
+  else if(a==='go'){openDecision();render()}
+  else if(a==='pick'){if(t.classList.contains('sel'))return;document.querySelectorAll('.opt').forEach(x=>{x.disabled=x!==t;x.classList.toggle('dim',x!==t)});t.classList.add('sel');setTimeout(()=>choose(+k),420);return}
+  else if(a==='next'){if(s.qi<4){s.qi++;openDecision()}else closeYear();render()}
+  else if(a==='year')nextYear();
+  else if(a==='metric'){ui.metric=k;document.querySelectorAll('#tabs button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.k===k));chart();return}
+  if(a!=='biz'&&a!=='metric'){const st=$('stage');if(st&&st.getBoundingClientRect().top<0)st.scrollIntoView({behavior:'smooth',block:'start'})}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('modal').innerHTML=''});
+document.addEventListener('input',e=>{const i=e.target;
+  if(i.id==='tc'){const v=parseFloat(i.value);if(v>0){TC=v;if(CUR==='USD')render()}return}
+  if(i.dataset.su){const k=i.dataset.su;if(k==='name'||k==='dir'){ui.setup[k]=i.value;return}const v=parseFloat(i.value);if(isFinite(v)&&v>=0)ui.setup[k]=i.dataset.m?v*rate():Math.max(1,v)}});
+$('cur-bs').onclick=()=>{CUR='Bs';render()};$('cur-usd').onclick=()=>{CUR='USD';render()};
+
+/* ===== cuentas, guardado y registro de partidas =====
+   Todo lo que identifica al jugador lo decide el servidor: registro, inicio de sesión (cookie httpOnly), partidas, logros y rol.
+   Esta capa solo llama a la API y dibuja las pantallas de cuenta. El motor no se modifica: se envuelven sus funciones. */
+const ACC={ready:false,me:null,owner:false,canSave:false,games:[],profile:null,cur:null,view:'home',detail:null,admin:null,busy:false,dirty:false,auth:{mode:'login',err:'',busy:false}};
+async function api(method,url,body){
+  try{const r=await fetch(url,{method,credentials:'same-origin',headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined});
+    let d={};try{d=await r.json()}catch(e){}return {ok:r.ok,status:r.status,data:d}}
+  catch(e){return {ok:false,status:0,data:{error:'No hay conexión con el servidor.'}}}}
+const iso=()=>new Date().toISOString();
+const fdate=t=>t?new Date(t).toLocaleDateString('es-BO',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
+const fdt=t=>t?new Date(t).toLocaleString('es-BO',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+const esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const STATUS={en_curso:['En curso','i-blue'],completada:['Completada','i-good'],abandonada:['Abandonada','i-warn']};
+function serialize(){return JSON.stringify({...s,queue:s.queue.map(d=>({id:d.id,ev:!!d.ev})),last:s.last?{...s.last,d:{id:s.last.d.id,ev:!!s.last.d.ev}}:null})}
+function restore(str){const o=JSON.parse(str),f=x=>x.ev?{...EV.find(e=>e.id===x.id),ev:true}:D.find(d=>d.id===x.id);
+  o.queue=o.queue.map(f);if(o.last)o.last.d=f(o.last.d);if(o.queue.some(x=>!x||!x.o))throw new Error('estado');return o}
+function gameDoc(){const c=ACC.cur;return {id:c.id,status:c.status,biz:s.biz,company:s.name,director:s.director,started:c.started,updated:iso(),completed:c.completed||null,
+  year:s.year,dec:Math.min(5,s.qi+1),phase:s.phase,setup:{cash:s.start.cash,price:s.price0,cust:s.start.cust},result:c.result||null,state:serialize()}}
+function finalResult(){const m=met(s),h=s.hist[s.hist.length-1],mix=styleMix()||{},e=ending();
+  return {final:e[1],index:+m.index.toFixed(1),value:Math.round(h.value),valueX:+(h.value/Math.max(1,s.start.value)).toFixed(2),sales:Math.round(h.sales),salesX:+(h.sales/s.S0).toFixed(2),profit:Math.round(h.profit),debt:Math.round(s.debt),cash:Math.round(s.cash),
+    cust:Math.round(h.cust),rep:Math.round(s.rep),sat:Math.round(s.sat),prod:Math.round(s.prod),inno:Math.round(s.inno),share:+(h.share*100).toFixed(1),emp:Math.round(s.emp),cap:Math.round(s.cap),
+    style:styleTitle().replace(/^\S+\s/,''),mix:Object.fromEntries(Object.entries(mix).map(([k,v])=>[k,Math.round(v*100)])),ach:Object.keys(s.ach),bankrupt:!!s.bankrupt,yearReached:s.year,
+    durationMin:Math.max(1,Math.round((Date.now()-new Date(ACC.cur.started))/60000))}}
+async function persist(){ // un guardado a la vez; si llega otro mientras tanto, se guarda de nuevo al terminar
+  if(!ACC.canSave||!ACC.cur||!s)return;const doc=gameDoc(),i=ACC.games.findIndex(g=>g.id===doc.id);if(i<0)ACC.games.unshift(doc);else ACC.games[i]=doc;
+  if(ACC.busy){ACC.dirty=true;return}ACC.busy=true;
+  const r=await api('PUT','/api/games/'+doc.id,doc),el=$('saved');
+  if(r.ok){if(r.data.achievements)ACC.profile.ach=r.data.achievements;if(el){el.textContent='Partida guardada';el.classList.add('on');setTimeout(()=>el.classList.remove('on'),1800)}}
+  else{if(el){el.textContent=r.status===401?'Sesión vencida: inicia sesión':'No se pudo guardar';el.classList.add('on')}if(r.status===401){ACC.canSave=false;ACC.me=null;acctBar()}}
+  ACC.busy=false;if(ACC.dirty){ACC.dirty=false;persist()}}
+function summary(){const g=ACC.games,done=g.filter(x=>x.status==='completada'&&x.result);
+  return {played:g.length,done:done.length,open:g.filter(x=>x.status==='en_curso').length,left:g.filter(x=>x.status==='abandonada').length,bestIdx:Math.max(0,...done.map(x=>x.result.index)),bestGame:[...done].sort((a,b)=>b.result.index-a.result.index)[0]||null}}
+function setUser(d){ACC.me=d.user;ACC.owner=!!d.user&&d.user.role==='ADMIN';ACC.canSave=!!d.user;ACC.profile=d.user?{created:d.user.created,ach:d.achievements||{}}:null;if(!d.user){ACC.games=[];ACC.admin=null}}
+async function loadGames(){const r=await api('GET','/api/games');ACC.games=r.ok?r.data.games:[]}
+async function boot(){const r=await api('GET','/api/me');if(r.ok&&r.data.user){setUser(r.data);await loadGames()}ACC.ready=true;render()}
+
+/* --- el motor se envuelve, no se cambia --- */
+const _newGame=newGame,_choose=choose,_closeYear=closeYear,_nextYear=nextYear,_render=render;
+newGame=function(){
+  for(const g of ACC.games)if(g.status==='en_curso'){g.status='abandonada';g.updated=iso()} // el servidor hace lo mismo al guardar la nueva
+  ACC.cur={id:'g'+Date.now().toString(36)+Math.floor(rnd()*1e6).toString(36),status:'en_curso',started:iso()};ACC.view='game';_newGame();persist()};
+choose=function(k){const d=s.queue[s.qi],pre=s.pre?s.pre.t:null,b=s.prev||snap(s);_choose(k);
+  const L=s.log[s.log.length-1],a=snap(s),pk=o=>({cash:Math.round(o.cash),debt:Math.round(o.debt),cust:Math.round(o.cust),sales:Math.round(o.sales),profit:Math.round(o.profit),index:+o.index.toFixed(1)});
+  L.n=s.log.filter(x=>!x.yr).length;L.sit=T(d.ev?d.a+': '+d.s:d.s);L.opt='ABCD'[k];L.before=pk(b);L.after=pk(a);if(pre)L.pre=pre;L.notes=s.last.notes;persist()};
+closeYear=function(){_closeYear();persist()};
+nextYear=function(){_nextYear();if(s&&s.phase==='end'&&ACC.cur&&ACC.cur.status==='en_curso'){ACC.cur.status='completada';ACC.cur.completed=iso();ACC.cur.result=finalResult();
+    if(ACC.profile)for(const id in s.ach)if(!ACC.profile.ach[id])ACC.profile.ach[id]=iso()}
+  persist()};
+async function resume(id){const r=await api('GET','/api/games/'+id);if(!r.ok){toast('<b>No se pudo abrir esa partida</b>'+esc(r.data.error||''));return}const g=r.data.game;
+  try{s=restore(g.state)}catch(e){toast('<b>No se pudo abrir esa partida</b>Empieza una nueva.');return}
+  for(const o of ACC.games)if(o.id!==id&&o.status==='en_curso')o.status='abandonada';
+  if(g.status==='abandonada'&&g.phase!=='end')g.status='en_curso';ACC.cur={id:g.id,status:g.status,started:g.started,completed:g.completed,result:g.result};ACC.view='game';render();if(g.status==='en_curso')persist()}
+
+/* --- pantallas de cuenta --- */
+const bizName=b=>(BIZ[b]||{}).name||b;
+function acctBar(){const el=$('acct');if(!el)return;
+  if(!ACC.ready){el.innerHTML='';return}
+  if(!ACC.me){el.innerHTML=`<div class="btns"><button class="btn ghost sm" data-pact="auth" data-k="login">Iniciar sesión</button><button class="btn sm" data-pact="auth" data-k="register">Crear cuenta</button></div>`;return}
+  const nm=esc((ACC.me.name||'').split(' ')[0]||ACC.me.username),b=(v,l)=>`<button data-pact="view" data-k="${v}" aria-pressed="${ACC.view===v}">${l}</button>`;
+  el.innerHTML=iconize(`<span class="hello">👤 Hola, <b>${nm}</b></span><div class="seg nav">${s&&s.phase!=='end'?b('game','Partida'):b('home','Inicio')}${b('profile','Mi perfil')}${b('games','Mis partidas')}${ACC.owner?b('admin','Administrador'):''}</div><button class="link" data-pact="logout">Cerrar sesión</button>`)}
+function guestCard(){return `<div class="panel guest"><div><b>Estás probando el simulador sin cuenta.</b><span>Puedes jugar una partida completa, pero no se guardará. Con una cuenta gratuita se guardan tus partidas, logros y estadísticas.</span></div><div class="btns"><button class="btn" data-pact="auth" data-k="register">Crear cuenta</button><button class="btn ghost" data-pact="auth" data-k="login">Iniciar sesión</button></div></div>`}
+function saveCard(){return `<div class="panel guest"><div><b>¿Quieres guardar tu partida? Crea una cuenta.</b><span>Esta partida y sus logros quedarán registrados en tu perfil al crear tu cuenta o iniciar sesión ahora.</span></div><div class="btns"><button class="btn" data-pact="auth" data-k="register">Crear cuenta y guardar</button><button class="btn ghost" data-pact="auth" data-k="login">Ya tengo cuenta</button></div></div>`}
+function authHTML(){const A=ACC.auth,reg=A.mode==='register',f=(id,l,type,ac,ph='')=>`<label for="au-${id}">${l}<input id="au-${id}" name="${id}" type="${type}" autocomplete="${ac}" placeholder="${ph}" required></label>`;
+  return `<div class="stage authwrap"><div class="card"><div class="banner b-blue"><span class="big">🏢</span><div><span class="hud-k">${reg?'Cuenta gratuita':'Bienvenido de nuevo'}</span><h3>${reg?'Crea tu cuenta de director':'Inicia sesión'}</h3></div></div>
+  <p class="sub">${reg?'Con tu cuenta se guardan tus empresas, tus logros y tus estadísticas para continuar otro día.':'Entra para continuar tus partidas y ver tu historial.'}</p>
+  <form id="authform" class="authform" method="post" action="#" novalidate>${reg?f('name','Nombre completo','text','name')+f('username','Nombre de usuario','text','username','sin espacios')+f('email','Correo electrónico','email','email')+f('password','Contraseña','password','new-password','mínimo 8 caracteres')+f('password2','Confirmar contraseña','password','new-password')
+    :f('ident','Usuario o correo electrónico','text','username')+f('password','Contraseña','password','current-password')}
+  <div id="autherr" class="impact i-bad" role="alert" ${A.err?'':'hidden'}>${esc(A.err)}</div>
+  <button class="btn" type="submit" ${A.busy?'disabled':''}>${A.busy?'Un momento…':reg?'Crear cuenta':'Entrar'}</button></form>
+  <p class="note">${reg?'¿Ya tienes una cuenta? <button class="link" data-pact="auth" data-k="login">Iniciar sesión</button>':'¿No tienes una cuenta? <button class="link" data-pact="auth" data-k="register">Registrarte</button>'} · <button class="link" data-pact="view" data-k="home">${s?'Volver a la partida':'Probar simulador sin cuenta'}</button></p></div></div>`}
+async function submitAuth(form){const A=ACC.auth;if(A.busy)return;const d=Object.fromEntries(new FormData(form).entries()),reg=A.mode==='register';
+  const err=m=>{A.err=m;A.busy=false;const e=$('autherr');if(e){e.textContent=m;e.hidden=false}const b=form.querySelector('button[type=submit]');if(b){b.disabled=false;b.textContent=reg?'Crear cuenta':'Entrar'}};
+  if(reg){if(!d.name.trim()||!d.username.trim()||!d.email.trim()||!d.password||!d.password2)return err('Completa todos los campos.');
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email.trim()))return err('Introduce un correo electrónico válido.');
+    if(d.password.length<8)return err('Contraseña demasiado corta: usa al menos 8 caracteres.');if(d.password!==d.password2)return err('Las contraseñas no coinciden.')}
+  else if(!d.ident.trim()||!d.password)return err('Escribe tu usuario o correo y tu contraseña.');
+  A.busy=true;const b=form.querySelector('button[type=submit]');b.disabled=true;b.textContent='Un momento…';
+  const r=await api('POST',reg?'/api/register':'/api/login',reg?d:{id:d.ident,password:d.password});if(!r.ok)return err(r.data.error||'Ocurrió un problema. Intenta de nuevo.');
+  A.busy=false;A.err='';setUser(r.data);await loadGames();toast(`<b>${reg?'Cuenta creada':'Sesión iniciada'}</b>Hola, ${esc(ACC.me.name.split(' ')[0])}`);
+  if(s&&ACC.cur){ACC.view='game';render();persist()}else{ACC.view='home';render()}}
+async function logout(){await api('POST','/api/logout',{});setUser({user:null});s=null;ACC.cur=null;ACC.view='home';ACC.auth={mode:'login',err:'',busy:false};render()}
+function resumeCard(){const g=ACC.games.find(x=>x.status==='en_curso');if(!g||!ACC.canSave)return'';
+  return `<div class="card"><div class="banner b-blue"><span class="big">🏢</span><div><span class="hud-k">Continúa tu partida</span><h3>${esc(g.company)}</h3></div></div>
+  <div class="idgrid"><div><span>📍 Negocio</span><b>${bizName(g.biz)}</b></div><div><span>📅 Avance</span><b>Año ${g.year} de 5 · decisión ${g.dec} de 5</b></div><div><span>⏳ Última vez</span><b>${fdt(g.updated)}</b></div></div>
+  <div class="btns"><button class="btn" data-pact="resume" data-k="${g.id}">Continuar</button><span class="note" style="align-self:center">o configura abajo una empresa nueva; esta partida quedará registrada como abandonada.</span></div></div>`}
+function gameCard(g,admin){const r=g.result,st=STATUS[g.status]||STATUS.en_curso;
+  return `<div class="panel gcard"><div class="head" style="margin:0"><h2>${esc(g.company)}</h2><span class="pill ${st[1]}">${st[0]}</span></div>
+  <div class="end"><div><span>Negocio</span><b>${bizName(g.biz)}</b></div><div><span>Fecha</span><b>${fdate(g.started)}</b></div><div><span>Año alcanzado</span><b>${r?r.yearReached:g.year} de 5</b></div>
+  <div><span>Resultado</span><b>${r?r.final:'—'}</b></div><div><span>Índice</span><b>${r?nf(r.index,1):'—'}</b></div><div><span>Valor</span><b>${r?nf(r.valueX,2)+'×':'—'}</b></div><div><span>Estilo</span><b>${r?r.style:'—'}</b></div><div><span>Duración</span><b>${r?r.durationMin+' min':'—'}</b></div></div>
+  <div class="btns">${admin?`<button class="btn ghost" data-pact="adetail" data-k="${admin}|${g.id}">Ver partida</button>`:`<button class="btn ghost" data-pact="detail" data-k="${g.id}">Ver partida</button>${g.status!=='completada'?`<button class="btn" data-pact="resume" data-k="${g.id}">Continuar</button>`:''}`}</div></div>`}
+function achList(owned){return `<div class="achs">${ACH.map(a=>`<span class="ach ${owned[a.id]?'on':''}" title="${a.g}: ${a.d}">${owned[a.id]?'✅':'🔒'} ${a.n}<small>${a.g}</small></span>`).join('')}</div>`}
+const topN=(arr,f)=>{const c={};arr.forEach(x=>{const k=f(x);if(k)c[k]=(c[k]||0)+1});return Object.entries(c).sort((a,b)=>b[1]-a[1])};
+const avg=(arr,f)=>arr.length?arr.reduce((a,x)=>a+f(x),0)/arr.length:0;
+const stat=(l,v)=>`<div><span>${l}</span><b>${v}</b></div>`;
+function freq(title,rows,total){return `<div class="panel"><div class="head"><h2>${title}</h2></div>${rows.length?`<div class="bars wide">${rows.map(([k,n])=>`<div><span>${esc(k)}</span><s><i style="width:${n/Math.max(1,total)*100}%"></i></s><em>${n}</em></div>`).join('')}</div>`:'<p class="note">Todavía no hay datos.</p>'}</div>`}
+function profileHTML(){const S=summary(),done=ACC.games.filter(g=>g.status==='completada'&&g.result),n=Object.keys(ACC.profile.ach).length,chron=[...done].sort((a,b)=>a.started.localeCompare(b.started));
+  const st=topN(done,g=>g.result.style)[0],bz=topN(ACC.games,g=>bizName(g.biz))[0],fn=topN(done,g=>g.result.final)[0];
+  return `<div class="stage"><div class="card"><div class="banner b-blue"><span class="big">👤</span><div><span class="hud-k">Mi perfil</span><h3>${esc(ACC.me.name)}</h3></div></div>
+  <div class="idgrid"><div><span>Usuario</span><b>${esc(ACC.me.username)}</b></div><div><span>Correo</span><b>${esc(ACC.me.email)}</b></div><div><span>Fecha de registro</span><b>${fdate(ACC.profile.created)}${ACC.owner?' · Administrador':''}</b></div></div>
+  <div class="rep">${stat('Partidas jugadas',S.played)}${stat('Completadas',S.done)}${stat('Abandonadas',S.left)}${stat('Mejor índice',S.done?nf(S.bestIdx,1):'—')}${stat('Logros',n+' / '+ACH.length)}</div></div>
+  <div class="panel"><div class="head"><h2>Mis estadísticas</h2><span class="note">sobre partidas completadas</span></div>${done.length?`<div class="end">
+   ${stat('Índice promedio',nf(avg(done,g=>g.result.index),1))}${stat('Mejor índice',nf(S.bestIdx,1))}${stat('Valor promedio',nf(avg(done,g=>g.result.valueX),2)+'×')}${stat('Mejor valor',nf(Math.max(...done.map(g=>g.result.valueX)),2)+'×')}
+   ${stat('Ventas promedio',money(avg(done,g=>g.result.sales)))}${stat('Utilidad promedio',money(avg(done,g=>g.result.profit)))}${stat('Deuda promedio',money(avg(done,g=>g.result.debt)))}${stat('Quiebras',done.filter(g=>g.result.bankrupt).length)}
+   ${stat('Mejor resultado',S.bestGame.result.final)}${stat('Final más frecuente',fn?fn[0]:'—')}${stat('Negocio más elegido',bz?bz[0]:'—')}${stat('Estilo predominante',st?st[0]:'—')}</div>
+   <div class="eyebrow" style="margin:14px 0 6px">Índice por partida</div><div class="evo">${chron.map((g,i)=>`<div title="${esc(g.company)}: ${nf(g.result.index,1)}"><i style="height:${g.result.index}%"></i><span>${i+1}</span><b>${nf(g.result.index)}</b></div>`).join('')}</div>`:'<p class="note">Completa tu primera partida para ver tus estadísticas.</p>'}</div>
+  <div class="panel"><div class="head"><h2>Logros de tu cuenta</h2><span class="note">${n} / ${ACH.length} logros</span></div>${achList(ACC.profile.ach)}</div>
+  <div class="btns"><button class="btn" data-pact="view" data-k="home">Nueva partida</button><button class="btn ghost" data-pact="view" data-k="games">Ver mis partidas</button></div></div>`}
+function gamesHTML(){return `<div class="stage"><div class="head" style="margin:0"><h2>Mis partidas</h2><span class="note">${ACC.games.length} registradas</span></div>
+  ${ACC.games.length?`<div class="glist">${ACC.games.map(g=>gameCard(g)).join('')}</div>`:'<div class="panel"><p class="note">Todavía no jugaste ninguna partida.</p></div>'}
+  <div class="btns"><button class="btn" data-pact="view" data-k="home">Nueva partida</button></div></div>`}
+function detailHTML(g,back){if(!g)return `<div class="stage"><div class="panel"><p class="note">Cargando la partida…</p></div></div>`;let st=null;try{st=JSON.parse(g.state)}catch(e){}const r=g.result,log=st?st.log:[];
+  return `<div class="stage"><div class="card plain"><div class="banner b-blue"><span class="big">🏢</span><div><span class="hud-k">${bizName(g.biz)} · ${fdate(g.started)} · ${(STATUS[g.status]||[])[0]}</span><h3>${esc(g.company)}</h3></div></div>
+  <div class="idgrid"><div><span>💰 Capital inicial</span><b>${money(g.setup.cash)}</b></div><div><span>🏷️ Precio inicial</span><b>${money(g.setup.price,2)}</b></div><div><span>👥 Clientes iniciales</span><b>${nf(g.setup.cust)}</b></div></div>
+  ${r?`<div class="impact i-blue"><b>${r.final}.</b> Estilo: ${r.style} (crecimiento ${r.mix.G||0}%, rentable ${r.mix.R||0}%, innovadora ${r.mix.I||0}%, conservadora ${r.mix.C||0}%).</div>
+  <div class="end">${stat('⭐ Índice',nf(r.index,1))}${stat('🏢 Valor',money(r.value)+' ('+nf(r.valueX,2)+'×)')}${stat('📈 Ventas',money(r.sales))}${stat('💵 Utilidad',money(r.profit))}${stat('💳 Deuda',money(r.debt))}${stat('💰 Caja',money(r.cash))}
+   ${stat('👥 Clientes',nf(r.cust))}${stat('📊 Participación',nf(r.share,1)+'%')}${stat('⭐ Reputación',r.rep)}${stat('😊 Satisfacción',r.sat)}${stat('⚙️ Productividad',r.prod)}${stat('💡 Innovación',r.inno)}${stat('🧑‍💼 Empleados',r.emp)}${stat('🏭 Capacidad',nf(r.cap))}</div>
+  <div><div class="eyebrow" style="margin-bottom:6px">Logros de la partida</div><div class="achs">${r.ach.length?ACH.filter(a=>r.ach.includes(a.id)).map(a=>`<span class="ach on">${a.ic} ${a.n}</span>`).join(''):'<span class="note">Ninguno</span>'}</div></div>`:`<div class="impact i-warn">Partida sin terminar: llegó al año ${g.year}, decisión ${g.dec}.</div>`}
+  <div><div class="eyebrow" style="margin-bottom:8px">Decisiones y eventos (${log.filter(x=>!x.yr).length})</div><ul class="tl">${log.map(x=>x.yr?`<li><i class="yr"></i><div><b>${esc(x.l)}</b></div></li>`:`<li><i class="${Math.abs(x.di)<.3?'':x.di>0?'up':'down'}"></i><div><span>Año ${x.y} · ${x.n?'decisión '+x.n+' · ':''}${x.ev?'Evento: ':''}${esc(x.a)}</span>${x.sit?`<span>${esc(x.sit)}</span>`:''}<b>${x.opt?x.opt+'. ':''}${esc(x.l)}</b>${x.before?`<span>Caja ${money(x.before.cash)} → ${money(x.after.cash)} · índice ${nf(x.before.index,1)} → ${nf(x.after.index,1)}</span>`:''}</div></li>`).join('')}</ul></div>
+  <div class="btns"><button class="btn ghost" data-pact="view" data-k="${back}">Volver</button></div></div></div>`}
+async function loadAdmin(){ACC.admin={loading:true};render();const r=await api('GET','/api/admin/overview');ACC.admin=r.ok?r.data:{error:true,denied:r.status===403||r.status===401};render()}
+function adminHTML(){const A=ACC.admin;
+  
+  if(!A||A.loading)return `<div class="stage"><div class="panel"><p class="note">Cargando los datos de todos los jugadores…</p></div></div>`;
+  if(A.error)return A.denied?`<div class="stage"><div class="panel"><h2>Acceso denegado</h2><p class="note">Esta sección es solo para el administrador.</p></div></div>`:`<div class="stage"><div class="panel"><p class="note">No se pudieron cargar los datos. Intenta de nuevo.</p><button class="btn" data-pact="view" data-k="admin">Reintentar</button></div></div>`;
+  const U=A.users,G=U.flatMap(u=>u.games.map(g=>({...g,uid:u.id}))),done=G.filter(g=>g.status==='completada'&&g.result),week=Date.now()-7*864e5,nm=u=>esc(u.name);
+  const pk=(A.picks||[]).map(p=>[(p.ev?'Evento: ':'')+p.area+' — '+(p.situation||'').slice(0,80),p]);
+  return `<div class="stage"><div class="card plain"><div class="banner b-gold"><span class="big">📊</span><div><span class="hud-k">Panel del administrador</span><h3>Resultados de todos los jugadores</h3></div></div>
+  <div class="eyebrow">Usuarios</div><div class="rep">${stat('Total',U.length)}${stat('Nuevos (7 días)',U.filter(u=>new Date(u.created)>week).length)}${stat('Activos (7 días)',U.filter(u=>new Date(u.last)>week).length)}${stat('Con partidas',U.filter(u=>u.games.length).length)}${stat('Sin partidas',U.filter(u=>!u.games.length).length)}</div>
+  <div class="eyebrow">Partidas</div><div class="rep">${stat('Total',G.length)}${stat('Completadas',done.length)}${stat('En curso',G.filter(g=>g.status==='en_curso').length)}${stat('Abandonadas',G.filter(g=>g.status==='abandonada').length)}${stat('Duración promedio',done.length?nf(avg(done,g=>g.result.durationMin))+' min':'—')}</div>
+  <div class="eyebrow">Resultados (partidas completadas)</div><div class="rep">${stat('Índice promedio',done.length?nf(avg(done,g=>g.result.index),1):'—')}${stat('Valor promedio',done.length?nf(avg(done,g=>g.result.valueX),2)+'×':'—')}${stat('Ventas promedio',money(avg(done,g=>g.result.sales)))}${stat('Utilidad promedio',money(avg(done,g=>g.result.profit)))}${stat('Quiebras',done.length?pct(done.filter(g=>g.result.bankrupt).length/done.length):'—')}</div>
+  <p class="note">Deuda promedio al final: ${money(avg(done,g=>g.result.debt))}.</p></div>
+  <div class="two3">${freq('Negocios elegidos',topN(G,g=>bizName(g.biz)),G.length)}${freq('Finales',topN(done,g=>g.result.final),done.length)}${freq('Estilos de dirección',topN(done,g=>g.result.style),done.length)}${freq('Logros (usuarios que lo tienen)',ACH.map(a=>[a.n,(A.achievements||{})[a.id]||0]).sort((a,b)=>b[1]-a[1]),U.length)}</div>
+  <div class="panel"><div class="head"><h2>Qué eligen los jugadores</h2><span class="note">situaciones más vistas</span></div>${pk.length?`<div class="scroll"><table class="tbl"><thead><tr><th>Situación</th><th>Veces</th><th>A</th><th>B</th><th>C</th><th>D</th></tr></thead><tbody>${pk.map(([k,v])=>`<tr><td>${esc(k)}</td><td>${v.n}</td>${['A','B','C','D'].map(o=>`<td>${v[o]?pct(v[o]/v.n):'—'}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`:'<p class="note">Todavía no hay decisiones registradas.</p>'}</div>
+  <div class="panel"><div class="head"><h2>Usuarios</h2><span class="note">${U.length}</span></div><div class="scroll"><table class="tbl"><thead><tr><th>Nombre</th><th>Usuario</th><th>Correo</th><th>Registro</th><th>Partidas</th><th>Última actividad</th><th>Mejor índice</th><th>Estado</th><th></th></tr></thead><tbody>
+  ${U.map(u=>{const d=u.games.filter(g=>g.result);return `<tr><td>${nm(u)}</td><td>${esc(u.username)}${u.role==='ADMIN'?' (admin)':''}</td><td>${esc(u.email)}</td><td>${fdate(u.created)}</td><td>${u.games.length}</td><td>${fdt(u.last)}</td><td>${d.length?nf(Math.max(...d.map(g=>g.result.index)),1):'—'}</td><td>${new Date(u.last)>week?'Activo':'Inactivo'}</td><td>${u.games.length?`<button class="link" data-pact="auser" data-k="${u.id}">Ver partidas</button>`:''}</td></tr>`}).join('')}</tbody></table></div></div>
+  ${A.sel?`<div class="head" style="margin:0"><h2>Partidas de ${nm(U.find(u=>u.id===A.sel))}</h2></div><div class="glist">${U.find(u=>u.id===A.sel).games.map(g=>gameCard(g,A.sel)).join('')}</div>`:''}</div>`}
+render=function(){
+  acctBar();
+  if(!ACC.ready){$('app').innerHTML='<div class="panel"><p class="note">Cargando…</p></div>';return}
+  if(!s&&ACC.view==='game')ACC.view='home';if(s&&ACC.view==='home')ACC.view='game';
+  if(!ACC.me&&['profile','games','detail','admin'].includes(ACC.view)){ACC.view='auth';ACC.auth.mode='login'}
+  const v=ACC.view;
+  if(v==='home'||v==='game'){_render();const st=$('app').firstElementChild;
+    if(!s){const c=ACC.me?resumeCard():guestCard();if(c&&st)st.insertAdjacentHTML('afterbegin',iconize(c))}
+    else{if(ACC.canSave){const h=document.querySelector('.hud-r');if(h&&!$('saved'))h.insertAdjacentHTML('beforeend','<span id="saved" class="saved" aria-live="polite">Partida guardada</span>')}
+      if(!ACC.me&&s.phase==='end'){const c=document.querySelector('#stage .card');if(c)c.insertAdjacentHTML('beforebegin',saveCard())}}
+    acctBar();return}
+  $('title').textContent='Simulador de Negocios';$('eyebrow').textContent=v==='auth'?'Juego de gestión empresarial':'Tu cuenta';
+  const html=v==='auth'?authHTML():v==='profile'?profileHTML():v==='games'?gamesHTML():v==='detail'?detailHTML(ACC.detail.g,ACC.detail.back):adminHTML();
+  $('app').innerHTML=iconize(html);acctBar()};
+async function openDetail(url,back){ACC.detail={g:null,back};ACC.view='detail';render();window.scrollTo(0,0);const r=await api('GET',url);if(r.ok){ACC.detail.g=r.data.game;render()}else{ACC.view=back;render();toast('<b>No se pudo abrir esa partida</b>'+esc(r.data.error||''))}}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-pact]');if(!t)return;const a=t.dataset.pact,k=t.dataset.k;
+  if(a==='auth'){ACC.auth={mode:k,err:'',busy:false};ACC.view='auth';render();window.scrollTo(0,0);const i=document.querySelector('#authform input');if(i)i.focus()}
+  else if(a==='logout')logout();
+  else if(a==='view'){if(k==='home'&&s&&s.phase==='end'&&ACC.me)s=null;if(k==='admin'){ACC.view='admin';loadAdmin();return}ACC.view=k==='game'&&!s?'home':k;if(k==='home'&&s)ACC.view='game';render();window.scrollTo(0,0)}
+  else if(a==='resume')resume(k);
+  else if(a==='detail')openDetail('/api/games/'+k,'games');
+  else if(a==='auser'){ACC.admin.sel=k;render()}
+  else if(a==='adetail')openDetail('/api/admin/games/'+k.split('|')[1],'admin')});
+document.addEventListener('submit',e=>{if(e.target.matches&&e.target.matches('form.authform')){e.preventDefault();submitAuth(e.target)}});
+render();boot();
+</script>
+</body>
+</html>

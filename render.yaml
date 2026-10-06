@@ -1,0 +1,24 @@
+# Despliegue en Render (Blueprint): un servicio web (backend + frontend) y una base PostgreSQL.
+services:
+  - type: web
+    name: simulador-negocios
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/me
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_DAYS
+        value: "30"
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: simulador-db
+          property: connectionString
+databases:
+  - name: simulador-db

@@ -1,0 +1,16 @@
+{
+  "name": "simulador-negocios-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "API, autenticación y base de datos del Simulador de Negocios",
+  "main": "server.js",
+  "engines": { "node": ">=22.5" },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server.js",
+    "make-admin": "node --disable-warning=ExperimentalWarning make-admin.js",
+    "test": "node --disable-warning=ExperimentalWarning test/api.test.js"
+  },
+  "dependencies": {
+    "pg": "^8.13.1"
+  }
+}
