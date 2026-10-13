@@ -1,0 +1,15 @@
+{
+  "name": "Simulador de Negocios",
+  "short_name": "Simulador",
+  "description": "Decide, aprende, crece: juego de gestión de un negocio durante 12 meses.",
+  "lang": "es",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5FAFD",
+  "theme_color": "#FFC93C",
+  "icons": [
+    { "src": "assets/icono-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icono-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "assets/icono.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
