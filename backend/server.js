@@ -55,7 +55,7 @@ const SECURITY_HEADERS = {
   'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'same-origin', 'Cross-Origin-Opener-Policy': 'same-origin',
   ...(PROD ? { 'Strict-Transport-Security': 'max-age=15552000; includeSubDomains' } : {}),
 };
-const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.json': 'application/json', '.txt': 'text/plain; charset=utf-8' };
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp', '.webmanifest': 'application/manifest+json', '.ico': 'image/x-icon', '.json': 'application/json', '.txt': 'text/plain; charset=utf-8' };
 
 async function main() {
   const db = await connect();
@@ -87,6 +87,8 @@ async function main() {
     o.final = str(r.final, 80); o.style = str(r.style, 60); o.bankrupt = !!r.bankrupt;
     o.mix = {}; for (const k of ['G', 'C', 'I', 'R']) o.mix[k] = num((r.mix || {})[k], 0, 100) || 0;
     o.ach = Array.isArray(r.ach) ? r.ach.filter(a => ACHIEVEMENTS.includes(a)) : [];
+    // V3: resumen opcional de las finanzas personales del propietario
+    if (r.pf && typeof r.pf === 'object') { o.pf = {}; for (const k of ['saldo', 'ahorro', 'recibido', 'gastado']) o.pf[k] = num(r.pf[k], 0, 1e12) || 0; }
     return o.final ? o : null;
   }
 
@@ -144,7 +146,7 @@ async function main() {
       const u = needUser(ctx), id = str(ctx.params.id, 40), b = ctx.body;
       if (!/^[a-z0-9]{6,40}$/.test(id)) fail(400, 'Identificador de partida no válido.');
       const status = str(b.status, 20), biz = str(b.biz, 20), company = str(b.company, 60) || 'Mi empresa', state = typeof b.state === 'string' ? b.state : '';
-      const year = num(b.year, 1, 5), dec = num(b.dec, 1, 5), started = new Date(b.started);
+      const year = num(b.year, 1, 12), dec = num(b.dec, 1, 5), started = new Date(b.started);
       if (!STATUSES.includes(status) || !BUSINESSES.includes(biz) || year === null || dec === null || isNaN(started) || !state || state.length > 380000) fail(400, 'Datos de la partida no válidos.');
       const parsed = parseJSON(state, null);
       if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.log) || parsed.log.length > 40) fail(400, 'Datos de la partida no válidos.');
@@ -166,7 +168,7 @@ async function main() {
         if (!x || x.yr) continue; n++;
         if (n <= Number(have.n)) continue;
         await q('INSERT INTO game_decisions (game_id,n,year,is_event,decision_id,area,situation,option,label,delta_index,before_vars,after_vars) VALUES (?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT (game_id,n) DO NOTHING',
-          [id, n, Math.round(num(x.y, 1, 5) || 1), x.ev ? 1 : 0, str(x.id, 40), str(x.a, 80), str(x.sit, 400), str(x.opt, 2), str(x.l, 200), num(x.di, -100, 100), x.before ? JSON.stringify(x.before).slice(0, 400) : null, x.after ? JSON.stringify(x.after).slice(0, 400) : null]);
+          [id, n, Math.round(num(x.y, 1, 12) || 1), x.ev ? 1 : 0, str(x.id, 40), str(x.a, 80), str(x.sit, 400), str(x.opt, 2), str(x.l, 200), num(x.di, -100, 100), x.before ? JSON.stringify(x.before).slice(0, 400) : null, x.after ? JSON.stringify(x.after).slice(0, 400) : null]);
       }
       let achievements;
       if (result) { for (const a of result.ach) await q('INSERT INTO user_achievements (user_id,achievement_id,unlocked_at) VALUES (?,?,?) ON CONFLICT (user_id,achievement_id) DO NOTHING', [u.id, a, t]); achievements = await achievementsOf(u.id); }
