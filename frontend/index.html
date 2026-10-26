@@ -449,6 +449,191 @@ body{padding-bottom:calc(var(--nav-h) + 12px + env(safe-area-inset-bottom,0px))}
 .det .ftbl td:last-child{white-space:nowrap}
 @media (max-width:480px){.ftbl.evol tr{grid-template-columns:minmax(0,1fr)}}
 
+/* ===== SIM-1 (diseño de interfaz) + SIM-15 (celulares) =====
+   Capa visual sobre V4/V5. Solo presentación: no cambia cálculos ni flujos.
+   Colores con significado (se usan igual en todas las pantallas):
+   ingresos = azul · costos y gastos = naranja · efectivo = turquesa · resultado = verde si gana, rojo si pierde. */
+:root{
+  --t-ing:var(--blue); --t-ing-soft:var(--blue-soft);
+  --t-gas:var(--purple); --t-gas-soft:var(--purple-soft);
+  --t-caja:var(--accent); --t-caja-soft:var(--accent-soft);
+  --t-gan:var(--good); --t-gan-soft:#E1F6E8;
+  --t-per:var(--bad); --t-per-soft:var(--bad-soft);
+  --t-neu:#8A9AA9; --t-neu-soft:var(--sunk);
+  --tap:44px; --radio:14px;
+}
+
+/* --- SIM-1 · Tipografía: ningún texto de lectura por debajo de 12 px --- */
+.eyebrow,.hud-k,.tag,.tbl th,.pc b{font-size:12px}
+.yr,.ring span,.ach small,.saved,.evo span,.evo b,.q,.meter em,.pfmov small{font-size:12px}
+.rep span,.chips i,.kpi .d,.tl span,.mini span,.ftbl td small,.opts small,.opt small{font-size:12px}
+.brand .wm span{font-size:11px;letter-spacing:.1em}
+.note{font-size:13px;line-height:1.55}
+.hud .mo{font-size:11px}
+
+/* --- SIM-1 · Botones: misma forma, foco visible y respuesta al tocar --- */
+.btn{border-radius:12px;line-height:1.2;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-align:center}
+.btn.sm{min-height:40px;padding:8px 14px;font-size:14px}
+.btn.ghost{border:1.5px solid var(--line);box-shadow:0 1px 0 var(--line)}
+.btn.ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn[disabled]{opacity:.55;cursor:not-allowed;filter:none}
+:where(button,a,select,input,summary,[tabindex]):focus-visible{outline:3px solid var(--celeste);outline-offset:2px}
+.link{min-height:40px;padding:0 2px;border-radius:4px}
+.seg button{min-height:40px;min-width:44px;padding:6px 12px}
+.tabs{gap:6px}
+.tabs button{min-height:40px;padding:6px 14px;font-size:13px}
+.q{width:28px;height:28px;font-size:13px;font-weight:700;position:relative}
+.q::after{content:"";position:absolute;inset:-8px}
+details.more summary{min-height:44px}
+.brand{min-height:44px}
+
+/* --- SIM-1 · Tarjetas: menos bordes gruesos, color solo como acento --- */
+.card{border:1px solid var(--line);border-top:4px solid var(--blue);border-radius:16px}
+.card.event{border-top-color:var(--bad)} .card.ev-good{border-top-color:var(--good)} .card.final{border-top-color:var(--gold)}
+.card.plain{border-top:1px solid var(--line)}
+.panel{border-radius:16px}
+.head h2{display:flex;align-items:center;gap:8px}
+.head h2 .ico{color:var(--accent)}
+.banner{border-radius:14px}
+
+/* --- SIM-1 · Indicadores del negocio (panel de la simulación) --- */
+.mini{gap:8px}
+.mini>div{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--t-neu);border-radius:12px;padding:9px 11px;gap:4px;justify-content:space-between}
+.mini span{display:block;color:var(--ink2);font-size:12.5px;line-height:1.3}
+.mini span .ico{width:16px;height:16px;margin-right:5px;vertical-align:-3px;color:var(--t-neu)}
+.mini span em{font-style:normal;font-size:12px;font-weight:600;color:var(--mute);white-space:nowrap}
+.mini span em::before{content:" · "}
+.mini b{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.t-ing{--t-neu:var(--t-ing)} .t-gas{--t-neu:var(--t-gas)} .t-caja{--t-neu:var(--t-caja)} .t-gan{--t-neu:var(--t-gan)} .t-per{--t-neu:var(--t-per)}
+.mini>.t-per b,.rsm .t-per b{color:var(--t-per)} .mini>.t-gan b,.rsm .t-gan b{color:var(--t-gan)}
+
+/* --- SIM-1 · Resumen de dinero (Finanzas) y resumen del Detalle contable --- */
+.rsm{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:0}
+.rsm>div{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--t-neu);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.rsm span{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink2);line-height:1.25}
+.rsm span .ico{width:16px;height:16px;color:var(--t-neu);flex:none}
+.rsm b{font-family:var(--mono);font-weight:600;font-size:18px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.rsm small{font-size:12px;color:var(--mute);line-height:1.3}
+.rsm-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.rep.det-res>div[class*="t-"]{box-shadow:inset 0 3px 0 var(--t-neu)}
+.rep.det-res>div.t-per b{color:var(--t-per)}
+.ftbl tr.tot td{background:var(--sunk)}
+.ftbl tr:not(.tot):not(.sub):not(.grp):hover td{background:#F7FBFD}
+
+/* --- SIM-1 · Opciones de decisión --- */
+.opt{border-radius:var(--radio);gap:8px}
+.opt-t{font-size:16px}
+.opt:active{background:var(--blue-soft)}
+@media (hover:none){.opt:hover{border-color:var(--line);box-shadow:0 1px 0 var(--line)}.pick:hover{border-color:var(--line);box-shadow:var(--sombra)}.btn:hover{filter:none}}
+
+/* --- SIM-15 · Formularios cómodos de tocar --- */
+.plan input[type=number],.setup input,.pfform input,.pfform select,.pfbudget input,.detsel select,.authform input,.tc input{min-height:40px}
+.plan input[type=number]{font-family:var(--mono);font-size:15px;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:8px 10px;color:var(--ink)}
+.plan label{min-height:40px}
+input[type=radio],input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent);margin:0;flex:none}
+
+/* --- SIM-15 · Ventanas (glosario) y avisos: siempre dentro de la pantalla --- */
+.overlay{padding:16px;overscroll-behavior:contain}
+.modal{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow:auto;overscroll-behavior:contain}
+
+/* --- Simulación en escritorio: el panel fijo solo si cabe entero en la pantalla --- */
+.grid.sim .vis{position:static}
+@media (min-width:961px) and (min-height:940px){.grid.sim .vis{position:sticky;top:10px}}
+
+/* --- SIM-15 · Tabletas (761–960 px) --- */
+@media (min-width:761px) and (max-width:960px){
+ .fin{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .rsm{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (min-width:621px) and (max-width:960px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:960px){
+ /* En una sola columna, la situación y sus opciones van primero; el panel del negocio, debajo */
+ .grid.sim .stage{grid-row:1}
+ .grid.sim .vis{grid-row:2}
+}
+
+/* --- SIM-15 · Celulares (≤ 760 px) --- */
+@media (max-width:760px){
+ :root{--nav-h:62px}
+ .wrap{gap:14px}
+ /* Encabezado compacto: marca y moneda arriba; cuenta debajo, a todo el ancho */
+ .top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 10px;align-items:center}
+ .top .tools{display:contents}
+ .top .brand{grid-column:1;grid-row:1;flex:none;min-width:0}
+ .top .seg{grid-column:2;grid-row:1}
+ .top #acct{grid-column:1/-1;grid-row:2;min-width:0}
+ .top #acct:empty{display:none}
+ .acct{gap:6px 10px}
+ .acct>.btns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%}
+ .acct .btn.sm{width:100%;white-space:nowrap;min-height:var(--tap);padding:8px 10px}
+ .acct .seg.nav{flex:1 1 auto}
+ .brand .wm{overflow:hidden}
+ .brand .wm b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ /* Barra del mes: mes, situación y salida en una fila; los 12 meses debajo */
+ .hud{grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"l r b" "m m m";gap:10px 12px;padding:12px 14px}
+ .hud .hud-l{grid-area:l;min-width:0} .hud .hud-r{grid-area:r} .hud .months{grid-area:m;order:0}
+ .hud .btn{grid-area:b;grid-column:auto;order:0;justify-self:end;align-self:center;min-height:var(--tap);padding:8px 12px;font-size:14px;white-space:nowrap}
+ .hud b{font-size:19px}
+ .hud .mo.on{font-size:12px}
+ /* Títulos de situaciones más cortos de leer */
+ .banner{gap:12px;padding:12px 14px}
+ .banner .big .ico{width:32px;height:32px}
+ .banner h3,.card h3{font-size:19px;line-height:1.3}
+ .card{padding:16px;gap:12px}
+ .panel{padding:16px}
+ .opt{padding:12px 14px}
+ .opt-ic{width:40px;height:40px} .opt-ic .ico{width:22px;height:22px}
+ /* Indicadores y resúmenes */
+ .rsm{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .rsm>div:last-child:nth-child(odd),.rep>div:last-child:nth-child(odd){grid-column:1/-1}
+ .rsm b{font-size:17px}
+ /* Formularios: 16 px evita el zoom automático del teclado en iPhone */
+ input,select,textarea{font-size:16px!important}
+ .plan input[type=number],.setup input,.pfform input,.pfform select,.pfbudget input,.detsel select,.authform input{min-height:var(--tap)}
+ .plan .row{gap:10px 14px}
+ .plan label{min-height:var(--tap)}
+ .btn.sm{min-height:var(--tap)}
+ .seg button,.tabs button{min-height:var(--tap)}
+ .link{min-height:var(--tap)}
+ .q{width:32px;height:32px}
+ .q::after{inset:-6px}
+ .detsel{flex-wrap:wrap}.detsel select{flex:1 1 200px}
+ /* Ventana del glosario como hoja inferior, sin tapar la barra de secciones */
+ .overlay{align-items:end;padding:12px 12px calc(12px + env(safe-area-inset-bottom,0px))}
+ .modal{max-width:none;border-radius:18px;padding:18px}
+ /* Avisos encima de la barra inferior, no sobre ella */
+ #toasts{bottom:calc(var(--nav-h) + 10px + env(safe-area-inset-bottom,0px))}
+ /* Barra inferior: etiquetas legibles */
+ .bnav button{font-size:12px;letter-spacing:-.01em}
+}
+@media (max-width:420px){
+ .brand img{width:34px;height:34px}
+ .brand .wm b{font-size:16.5px}
+ .top .seg button{padding:6px 10px;min-width:44px}
+ .rep{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .mini b{font-size:16px}
+}
+@media (max-width:380px){
+ /* Pantallas de 360 px: la marca ocupa su fila; la cuenta y la moneda comparten la segunda */
+ .top{grid-template-columns:minmax(0,1fr) auto}
+ .top .brand{grid-column:1/-1}
+ .top #acct{grid-column:1;grid-row:2}
+ .top .seg{grid-column:2;grid-row:2;align-self:start}
+ .top #acct:empty~.seg{grid-column:1/-1;justify-self:end}
+ .acct .btn.sm{padding:8px 6px;font-size:13.5px}
+ .brand .wm b{font-size:18px}
+ .bnav button,.bnav button span{font-size:11.5px}
+ .hud .btn{padding:8px 10px}
+}
+/* Gráficos: el SVG mide 560 de ancho y se reduce en pantallas chicas; se agranda el texto para que se lea a ≥ 11 px reales */
+@media (max-width:760px){.chart text{font-size:15px}}
+@media (max-width:480px){.chart text{font-size:19px}}
+/* Dispositivos táctiles: todo lo que se toca mide al menos 44 px */
+@media (pointer:coarse){
+ .btn,.btn.sm,.seg button,.tabs button,.link,.detsel select{min-height:var(--tap)}
+}
+@media (max-width:340px){.top #acct{grid-column:1/-1}.top .seg{grid-column:1/-1;grid-row:3;justify-self:end}.acct .btn.sm{padding:8px 10px}}
+
 </style>
 </head>
 <body>
@@ -526,6 +711,7 @@ const ICON={
  refresh:_p('M4 12a8 8 0 0113.700-5.700L20 8M20 4v4h-4M20 12a8 8 0 01-13.700 5.700L4 16M4 20v-4h4'),
  pin:_p('M12 21s7-6 7-11a7 7 0 00-14 0c0 5 7 11 7 11z')+_c(12,10,2.5),
  compass:_c(12,12,9)+_p('M15.500 8.500l-2 5-5 2 2-5z'),
+ wallet:_r(3,6,18,14,2.5)+_p('M3 10h18M16 15h2'),
  minus:_p('M5 12h14'),check:_p('M4 12l5 5 11-11'),
  home:_p('M3 11l9-7 9 7M5 10v10h5v-6h4v6h5V10'),
  play:_c(12,12,9)+_p('M10 8.5l6 3.5-6 3.5z')
@@ -636,7 +822,20 @@ function irA(tab) {
 function fmtInd(x) { return x.t === 'm' ? money(x.v) : x.t === 'm2' ? money(x.v, 2) : x.t === 'n' ? nf(x.v) : x.t === '%' ? pct(x.v) : x.t === 'sem' ? nf(x.v, 1) + ' semanas' : x.t === 'mes' ? nf(x.v, 1) + ' meses' : nf(x.v) }
 function miniHTML() {
   const I = indicadores(s), pick = { comida: ['units', 'sales', 'res', 'cash', 'repo', 'pf'], delivery: ['units', 'sales', 'res', 'cash', 'capu', 'lost'], ecommerce: ['units', 'sales', 'res', 'cash', 'stock', 'repo'] }[s.biz];
-  return `<div class="mini">${pick.map(k => I.find(x => x.k === k)).filter(Boolean).map(x => `<div title="${esc(x.f)}"><span>${x.l}${x.k === 'units' || x.k === 'sales' || x.k === 'res' ? ' (mes)' : ''}</span><b class="${x.v < 0 && (x.k === 'res' || x.k === 'cash') ? 'down' : ''}">${fmtInd(x)}</b></div>`).join('')}</div>`
+  return `<div class="mini">${pick.map(k => I.find(x => x.k === k)).filter(Boolean).map(x => { const t = tonoInd(x); return `<div class="${t[0]}" title="${esc(x.f)}"><span>${ico(t[1])}${x.l}${x.k === 'units' || x.k === 'sales' || x.k === 'res' ? '<em>mes</em>' : ''}</span><b class="${x.v < 0 && (x.k === 'res' || x.k === 'cash') ? 'down' : ''}">${fmtInd(x)}</b></div>` }).join('')}</div>`
+}
+// SIM-1: color e ícono de cada indicador según lo que representa (solo presentación).
+function tonoInd(x) {
+  const u = { comida: 'plate', delivery: 'truck', ecommerce: 'box' }[s.biz] || 'box';
+  return x.k === 'sales' ? ['t-ing', 'coin'] : x.k === 'res' ? [x.v < 0 ? 't-per' : 't-gan', x.v < 0 ? 'down' : 'up'] : x.k === 'cash' ? [x.v < 0 ? 't-per' : 't-caja', 'wallet'] : x.k === 'cmv' || x.k === 'op' || x.k === 'var' || x.k === 'fix' || x.k === 'merma' ? ['t-gas', 'receipt'] : x.k === 'units' ? ['', u] : x.k === 'pf' ? ['', 'user'] : x.k === 'lost' ? ['', 'warn'] : x.k === 'capu' ? ['', 'bars'] : ['', 'box']
+}
+// SIM-1: resumen de dinero de Finanzas. Usa las mismas cifras que el Detalle contable (detalleContable del motor).
+function resumenFin() {
+  const abierto = s.phase !== 'end' && s.phase !== 'month', H = s.hist.slice(1), m = abierto ? 'actual' : (H.length ? H[H.length - 1].m : 'actual');
+  const R = detalleContable(s, m).resumen, cg = R.ventas - R.resultado, rent = R.ventas > 0 ? R.resultado / R.ventas : null;
+  const t = (cls, ic, l, v, nota) => `<div class="${cls}"><span>${ico(ic)}${l}</span><b>${v}</b><small>${nota}</small></div>`;
+  return `<div class="panel full"><div class="rsm-h"><h2>${ico('coin')} Tu dinero en el mes ${R.mes}</h2><span class="note">${R.cerrado ? 'mes cerrado' : 'proyección con tus decisiones'}</span></div>
+   <div class="rsm">${t('t-ing', 'coin', 'Entra: ventas', money(R.ventas), 'lo que cobras por vender')}${t('t-gas', 'receipt', 'Sale: costos, gastos e impuestos', money(cg), 'ventas − resultado')}${t(R.resultado < 0 ? 't-per' : 't-gan', R.resultado < 0 ? 'down' : 'up', R.resultado < 0 ? 'Resultado: pierdes' : 'Resultado: ganas', money(R.resultado), 'lo que queda del mes')}${t(R.caja < 0 ? 't-per' : 't-caja', 'wallet', 'Efectivo en caja', money(R.caja), 'dinero disponible hoy')}${t(rent != null && rent < 0 ? 't-per' : rent != null ? 't-gan' : '', 'bars', 'Rentabilidad', rent == null ? '—' : pct(rent), 'resultado ÷ ventas')}</div></div>`
 }
 
 /* ===== Inicio ===== */
@@ -674,7 +873,7 @@ function barHTML() {
   return `<div class="hud"><div class="hud-l"><span class="hud-k">Trimestre ${trimestre(s.month)} · ${L.n}</span><b>MES ${s.month} / 12</b></div>
   <div class="months" aria-label="Avance del año">${Array.from({ length: 12 }, (_, i) => i + 1).map(m => `<div class="mo ${m === s.month ? 'on' : ''}"><i><u style="width:${m < s.month ? 100 : m === s.month ? hechas / Math.max(1, n) * 100 : 0}%"></u></i>${m}</div>`).join('')}</div>
   <div class="hud-r"><span class="hud-k">${cerrado ? 'Mes cerrado' : s.phase === 'intro' ? 'Por empezar' : 'Situación'}</span><b>${cerrado ? n + ' / ' + n : cur + ' / ' + n}</b></div>
-  <button class="btn ghost" data-act="quit">${ACC.canSave ? 'Salir al inicio' : 'Reiniciar'}</button></div>`
+  <button class="btn ghost sm" data-act="quit">${ACC.canSave ? 'Salir al inicio' : 'Reiniciar'}</button></div>`
 }
 function visPanel() {
   return `<div class="panel co"><div class="co-h"><div><span class="eyebrow">${esc(s.name)} · ${B().name}</span><h2>${stageName()}</h2></div><span class="pill">${personalTxt()}${s.own < .999 ? ' · tu parte ' + pct(s.own) : ''}</span></div>${scene()}${etapaHTML()}
@@ -840,7 +1039,7 @@ function finHTML() {
    <p class="note">Este mes venderías ${nf(m.units)} ${b.u}${be === Infinity ? '; cada venta deja pérdida.' : m.units >= be ? ', ' + pct(m.units / be - 1) + ' por encima de lo que necesitas para no perder.' : ', ' + pct(1 - m.units / be) + ' menos de lo que necesitas para no perder.'} Margen de contribución: ${money(m.mc, 2)} por ${b.uS}. Capacidad: ${nf(m.capE)} al mes.</p></div>`;
   const ev = `<div class="panel full"><div class="head"><h2>Evolución mes a mes</h2><div class="tabs" id="tabs">${[['sales', 'Ventas'], ['profit', 'Resultado'], ['units', cap1(b.u)], ['cash', 'Caja'], ['debt', 'Deuda'], ['value', 'Valor']].map(([k, l]) => `<button data-act="metric" data-k="${k}" aria-pressed="${ui.metric === k}">${l}</button>`).join('')}</div></div><div class="chart" id="chart"></div></div>`;
   return `<div class="stage"><div class="head" style="margin:0"><h2>Finanzas · ${esc(s.name)}</h2><span class="note">${s.phase === 'end' ? 'partida terminada' : 'mes ' + s.month + ' de 12'}</span></div>
-  <div class="fin">${ind}${er}${bg}${inv}${negocioPersonal()}${eq}${ev}
+  <div class="fin">${resumenFin()}${ind}${er}${bg}${inv}${negocioPersonal()}${eq}${ev}
   <details class="panel more full"><summary>Parámetros iniciales y supuestos de ${b.name}</summary><table class="ftbl" style="margin-top:8px"><tbody>${b.supuestos.map(([l, v, n]) => `<tr><td>${l}<small>${n}</small></td><td>${v}</td></tr>`).join('')}</tbody></table></details></div></div>`
 }
 function negocioPersonal() { return dineroHTML() }
@@ -904,7 +1103,7 @@ function detHTML() {
   const opts = H.map(h => `<option value="${h.m}" ${ui.det === h.m ? 'selected' : ''}>Mes ${h.m} (cerrado)</option>`).join('') + (abierto ? `<option value="actual" ${ui.det === 'actual' ? 'selected' : ''}>Mes ${s.month} (en curso, proyección)</option>` : '');
   const tabla = (filas, cls = '') => `<table class="ftbl ${cls}"><tbody>${filas.map(x => `<tr class="${x.nota === 'sub' ? 'sub' : x.nota === 'tot' ? 'tot' : ''}"><td>${x.l}</td><td class="${neg(x.v)}">${x.nota === 'unidades' ? nf(x.v) : x.nota === 'precio' ? money(x.v, 2) : mny(x.v)}</td></tr>`).join('')}</tbody></table>`;
   const tit = (l, ex = '') => `<div class="head"><h2>${l}</h2>${ex}</div>`;
-  const resumen = `<div class="panel full"><div class="rep det-res">${[['Mes', R.cerrado ? `${R.mes} (cerrado)` : `${R.mes} (proyección)`], ['Ventas', mny(R.ventas)], ['Costos variables', mny(R.costos)], ['Gastos', mny(R.gastos)], ['Resultado del mes', mny(R.resultado), neg(R.resultado)], [R.cerrado ? 'Resultado acumulado' : 'Resultado acumulado (meses cerrados)', mny(R.resAcum), neg(R.resAcum)], ['Efectivo disponible', mny(R.caja), neg(R.caja)], ['Deudas (banco y proveedores)', mny(R.deudas)], ['Impuestos pendientes', mny(R.impPend)]].map(([l, v, c]) => `<div><span>${l}</span><b class="${c || ''}">${v}</b></div>`).join('')}</div>
+  const resumen = `<div class="panel full"><div class="rep det-res">${[['Mes', R.cerrado ? `${R.mes} (cerrado)` : `${R.mes} (proyección)`], ['Ventas', mny(R.ventas), '', 't-ing'], ['Costos variables', mny(R.costos), '', 't-gas'], ['Gastos', mny(R.gastos), '', 't-gas'], ['Resultado del mes', mny(R.resultado), neg(R.resultado), R.resultado < -.004 ? 't-per' : 't-gan'], [R.cerrado ? 'Resultado acumulado' : 'Resultado acumulado (meses cerrados)', mny(R.resAcum), neg(R.resAcum), R.resAcum < -.004 ? 't-per' : 't-gan'], ['Efectivo disponible', mny(R.caja), neg(R.caja), R.caja < -.004 ? 't-per' : 't-caja'], ['Deudas (banco y proveedores)', mny(R.deudas)], ['Impuestos pendientes', mny(R.impPend)]].map(([l, v, c, t]) => `<div class="${t || ''}"><span>${l}</span><b class="${c || ''}">${v}</b></div>`).join('')}</div>
    <p class="note">${D.cerrado ? 'Cifras registradas al cerrar el mes.' : 'Mes en curso: es la proyección con las decisiones tomadas hasta ahora; las cifras definitivas se registran al cerrar el mes.'} «Gastos» incluye gastos operativos, de personal, depreciación, decisiones y resultado financiero. ${D.cuadra ? '<span class="ok">✓ Cada subtotal coincide con el registro del motor</span>' : '<span class="down">El cálculo no coincide con el registro: avisa del error.</span>'}</p></div>`;
   const ing = `<div class="panel">${tit('Ingresos')}${tabla(D.ingresos)}</div>`;
   const cos = `<div class="panel">${tit('Costos y gastos')}${tabla(D.costos)}<p class="note">${b.duenoTrabaja ? 'El dueño trabaja en el negocio y no cobra sueldo: vive de sus retiros, que no son gastos. ' : ''}La depreciación es un gasto que no sale de la caja. <button class="link" data-act="gl" data-k="aportes">Aportes y aguinaldo</button></p>
